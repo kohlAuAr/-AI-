@@ -6,6 +6,7 @@ import { state, statusLabels, dateLabel, toast, resetPrototype } from '../protot
 import { activityState, myRegistrations, refreshActivities, activityTime } from './activities';
 import CommunityIcon from './CommunityIcon.vue';
 import CommunityDialog from './CommunityDialog.vue';
+import CommunityProfileEditor from './CommunityProfileEditor.vue';
 const route = useRoute();
 const tabs = [{ id: 'applications', label: '入社申请' }, { id: 'memberships', label: '我的社团' }, { id: 'registrations', label: '活动报名' }, { id: 'favorites', label: '我的收藏' }];
 const tab = ref(tabs.some(t => t.id === route.query.tab) ? String(route.query.tab) : 'applications');
@@ -20,6 +21,8 @@ const registrations = computed(() => businessMode ? myRegistrations.value.map(r 
 const favorites = computed(() => clubCatalog.value.filter(c => state.favorites.includes(c.id)));
 const interests = ['摄影', '编程', '户外', '音乐', '艺术', '公益', '运动', '阅读', '科技', '表达'];
 const selectedInterests = ref([...state.profile.interests]);
+const profile = computed(() => business.profile?.id === business.user?.id ? business.profile : null);
+watch(() => business.user?.id, () => { modal.value = ''; });
 onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
 async function refresh() { await refreshBusiness(); await refreshActivities(); }
 async function withdraw() {
@@ -36,7 +39,9 @@ function saveInterests() { state.profile.interests = [...selectedInterests.value
     <div v-if="!user" class="community-list-message"><h2>登录后查看你的申请与社团</h2><p>登录后，在这里查看报名和审核进度。</p><RouterLink to="/login" class="community-button">前往登录</RouterLink></div>
     <template v-else>
       <RouterLink v-if="businessMode && business.user?.role === 'PLATFORM_ADMIN'" to="/platform/banners" class="community-help-row"><CommunityIcon name="home" /><strong>首页内容管理</strong><CommunityIcon name="chevron" /></RouterLink>
-      <section class="community-profile-summary"><span class="community-profile-avatar">{{ user.name.slice(0, 1) }}</span><div><h2>你好，{{ user.name }}。</h2><p>{{ user.major }}</p><span>{{ accountLabel }}</span></div><button v-if="businessMode" type="button" class="community-text-button" :disabled="business.loading || activityState.loading" @click="refresh">刷新记录</button><button v-else type="button" class="community-text-button" @click="selectedInterests = [...state.profile.interests]; modal = 'interests'">编辑兴趣</button></section>
+      <section class="community-profile-summary"><span class="community-profile-avatar">{{ user.name.slice(0, 1) }}</span><div><h2>你好，{{ user.name }}。</h2><p>{{ user.major }}</p><span>{{ accountLabel }}</span></div><button v-if="businessMode" type="button" class="community-text-button" :disabled="business.loading || !profile" @click="modal = 'profile'">编辑资料</button><button v-else type="button" class="community-text-button" @click="selectedInterests = [...state.profile.interests]; modal = 'interests'">编辑兴趣</button></section>
+      <template v-if="businessMode && profile"><div class="community-profile-interests"><span v-for="tag in profile.interests" :key="tag">{{ tag }}</span><span v-if="!profile.interests.length">尚未选择兴趣</span></div><p class="community-profile-time">空闲时间：{{ profile.availableTime || '尚未填写' }}</p></template>
+      <div v-if="businessMode" class="community-profile-refresh"><button type="button" class="community-text-button" :disabled="business.loading || activityState.loading" @click="refresh">刷新记录</button></div>
       <div v-if="!businessMode" class="community-profile-interests"><span v-for="tag in state.profile.interests" :key="tag">{{ tag }}</span></div>
       <div class="community-profile-counts"><button type="button" @click="tab = 'memberships'"><strong>{{ memberships.length }}</strong><span>已加入社团</span></button><button type="button" @click="tab = 'applications'"><strong>{{ applications.filter(a => a.status === 'pending').length }}</strong><span>待审核申请</span></button><button type="button" @click="tab = 'registrations'"><strong>{{ registrations.filter(r => r.status === 'REGISTERED').length }}</strong><span>已报名活动</span></button><button type="button" @click="tab = 'favorites'"><strong>{{ favorites.length }}</strong><span>本地收藏</span></button></div>
       <div class="community-category-tabs community-personal-tabs" role="group" aria-label="我的记录"><button v-for="item in tabs" :key="item.id" type="button" :aria-pressed="tab === item.id" :class="{ active: tab === item.id }" @click="tab = item.id">{{ item.label }}</button></div>
@@ -52,6 +57,7 @@ function saveInterests() { state.profile.interests = [...selectedInterests.value
       <button v-if="!businessMode" type="button" class="community-prototype-reset community-text-button" @click="modal = 'reset'">重置本浏览器的演示记录</button>
     </template>
   </div>
+  <CommunityProfileEditor v-if="modal === 'profile' && profile" :profile="profile" @close="modal = ''" />
   <CommunityDialog v-if="withdrawing" title="撤回这份申请？" :busy="businessMode && business.saving" @close="withdrawing = ''"><p>{{ businessMode ? '只可撤回待审核申请。撤回记录会保留，可以再次申请。' : '撤回这份模拟申请后，可以重新申请；已通过的申请不可撤回。' }}</p><div class="community-dialog-actions"><button type="button" class="community-button" :disabled="businessMode && business.saving" @click="withdraw">{{ businessMode && business.saving ? '正在保存…' : '确认撤回' }}</button><button type="button" class="community-text-button" :disabled="businessMode && business.saving" @click="withdrawing = ''">暂不撤回</button></div></CommunityDialog>
   <CommunityDialog v-if="modal === 'interests'" title="编辑兴趣偏好" @close="modal = ''"><p>仅用于本浏览器的标签筛选，不代表 AI 推荐，也不修改数据库个人资料。</p><div class="community-interest-picker"><button v-for="tag in interests" :key="tag" type="button" :aria-pressed="selectedInterests.includes(tag)" :class="{ selected: selectedInterests.includes(tag) }" @click="toggleInterest(tag)">{{ tag }}</button></div><div class="community-dialog-actions"><button type="button" class="community-button" @click="saveInterests">保存偏好</button></div></CommunityDialog>
   <CommunityDialog v-if="modal === 'reset'" title="恢复原型的初始数据？" @close="modal = ''"><p>只重置本浏览器的模拟记录，不删除后端数据库资料。</p><div class="community-dialog-actions"><button type="button" class="community-button" @click="resetPrototype(); modal = ''">确认恢复演示数据</button><button type="button" class="community-text-button" @click="modal = ''">取消</button></div></CommunityDialog>

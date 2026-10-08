@@ -90,6 +90,16 @@
 .community-app .p-modal p { font-size: 14px; color: var(--community-muted); margin: 12px 0; }
 .community-modal-context { display: block; font-size: 12px; color: var(--community-muted); margin-bottom: 8px; }
 .community-login-page > .p-panel { max-width: 440px; margin-inline: auto; }
+.community-form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 18px; }
+.community-form-fields > label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.community-form-fields small { font-size: 12px; color: var(--community-muted); line-height: 1.6; }
+.community-form-fields input[readonly] { background: var(--community-bg); color: var(--community-muted); }
+.community-form-fields .community-field-error { color: #9b342e; }
+.community-account-tabs { padding: 0; margin-bottom: 20px; }
+.community-app .community-profile-hint { font-size: 14px; color: var(--community-muted); margin-bottom: 20px; }
+.community-profile-time { padding: 0 24px 12px; font-size: 13px; color: var(--community-muted) !important; }
+.community-profile-refresh { display: flex; justify-content: flex-end; padding: 0 16px 8px; }
+.community-app .community-form-fields :is(input, textarea) { width: 100%; }
 .community-app .community-login-intro { color: var(--community-muted); font-size: 14px; line-height: 1.8; margin-bottom: 24px; }
 .community-demo-accounts { border-top: 1px solid var(--community-line); margin-top: 24px; padding-top: 16px; color: var(--community-muted); font-size: 13px; }
 .community-demo-accounts summary { cursor: pointer; min-height: 44px; }

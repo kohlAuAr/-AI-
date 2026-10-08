@@ -6,6 +6,12 @@ import { renderToString } from '@vue/server-renderer';
 globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 let user = null; let failure = false; let writes = 0; let notificationWriteFailure = false; let delayInbox = null;
+let registered = null, profileWriteFailure = false, delayProfileWrite = null;
+const profiles = new Map();
+function profileFor(account) {
+  if (!profiles.has(account.id)) profiles.set(account.id, { ...account, interests: [], availableTime: '' });
+  return profiles.get(account.id);
+}
 const student = { id: 1, username: 'student', name: '林同学', major: '计算机科学', role: 'STUDENT', managedClubIds: [] };
 const manager = { id: 2, username: 'photo_manager', name: '摄影社负责人', major: '测试', role: 'MANAGER', managedClubIds: [10] };
 const platformAdmin = { id: 3, username: 'platform_admin', name: '首页管理员', major: '测试', role: 'PLATFORM_ADMIN', managedClubIds: [] };
@@ -17,11 +23,25 @@ function notify(type, title, targetPath) { notices.unshift({ id: notices.length 
 globalThis.fetch = async (url, options = {}) => {
   if (failure) throw new Error('校园服务不可用');
   const path = String(url); const method = options.method || 'GET';
+  if (method === 'PUT' && path === '/api/profile') {
+    assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
+    if (profileWriteFailure) return Response.json({ detail: '资料保存失败，请重试' }, { status: 503 });
+    const profile = { ...profileFor(user), ...JSON.parse(options.body) };
+    profiles.set(user.id, profile); user.name = profile.name; user.major = profile.major;
+    if (delayProfileWrite) { const pause = delayProfileWrite; delayProfileWrite = null; await pause; }
+    return Response.json(profile);
+  }
   if (method === 'POST') {
     assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
     writes++;
     if (notificationWriteFailure && path.includes('/notifications/')) return Response.json({ detail: '消息写入失败' }, { status: 409 });
-    if (path.endsWith('/auth/login')) { const name = new URLSearchParams(options.body).get('username'); user = name === 'platform_admin' ? platformAdmin : name === 'photo_manager' ? manager : student; }
+    if (path.endsWith('/auth/register')) {
+      const input = JSON.parse(options.body);
+      if (registered?.username === input.username) return Response.json({ detail: '账号已存在' }, { status: 409 });
+      registered = { id: 4, username: input.username, name: input.name, major: input.major, role: 'STUDENT', managedClubIds: [] };
+      return Response.json(profileFor(registered));
+    }
+    if (path.endsWith('/auth/login')) { const name = new URLSearchParams(options.body).get('username'); user = name === registered?.username ? registered : name === 'platform_admin' ? platformAdmin : name === 'photo_manager' ? manager : student; }
     else if (path.endsWith('/auth/logout')) user = null;
     else if (path.endsWith('/recruitment/applications')) applications.unshift({ id: 20, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', reason: JSON.parse(options.body).reason, status: 'pending', feedback: '', createdAt: '2026-10-04T10:00:00Z' });
     else if (path.endsWith('/review')) { applications[0].status = 'approved'; members.push({ id: 30, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', role: 'MEMBER', joinedAt: '2026-10-04T10:01:00Z' }); notify('APPLICATION_APPROVED', '入社申请已通过', '/me?tab=applications'); }
@@ -35,6 +55,7 @@ globalThis.fetch = async (url, options = {}) => {
     return Response.json({ status: 'OK' });
   }
   if (path.endsWith('/auth/session')) return Response.json({ user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf', demoAccounts: true });
+  if (path === '/api/profile') { assert(user, 'anonymous sessions must not request a profile'); return Response.json(profileFor(user)); }
   if (path === '/api/platform/banners' || path === '/api/platform/banner-targets') { assert.equal(user?.role, 'PLATFORM_ADMIN', 'non-admin page must not fetch platform management data'); return Response.json([]); }
   if (path.startsWith('/api/notifications?')) { const mine = notices.filter(n => n.userId === user?.id); const response = Response.json({ items: mine, total: mine.length, unread: mine.filter(n => !n.readAt).length, page: 0, hasMore: false }); if (delayInbox) { const pause = delayInbox; delayInbox = null; await pause; } return response; }
   if (path === '/api/clubs') return Response.json([{ id: 10, slug: 'photo', name: '光影摄影社', category: '文化艺术', description: '后端社团介绍', tags: '摄影,户外', members: members.length, recruiting: true, requirements: '后端招新条件', schedule: '周三', place: '学生中心' }]);
@@ -78,6 +99,7 @@ try {
   const loginPage = await page('/login');
   assert(loginPage.includes('autocomplete="username"') && loginPage.includes('autocomplete="current-password"'), 'login preserves password manager support');
   assert(loginPage.includes('community-demo-accounts') && !loginPage.includes('CAMPUS ACCOUNT'), 'demo accounts use a disclosure rather than a marketing panel');
+  assert(loginPage.includes('注册学生账号'), 'login exposes student registration');
   const recruitment = await page('/recruitment');
   assert.equal(router.currentRoute.value.fullPath, '/clubs?recruiting=true', 'old recruitment route remains compatible');
   assert(recruitment.includes('<h1>社团</h1>'), 'recruitment is a club directory filter, not a separate page');
@@ -91,6 +113,7 @@ try {
   await client.logout();
   assert.equal(business.applications.length, 0);
   assert.equal(business.memberships.length, 0);
+  assert.equal(business.profile, null, 'logout clears private profile');
   await client.login('photo_manager', 'test');
   assert.equal(client.managedClubs.value.length, 1);
   assert.equal(business.managedApplications.length, 1);
@@ -174,5 +197,42 @@ try {
   assert(!(await page('/me')).includes('负责人工作台'), 'platform role does not imply a club manager role');
   await client.logout();
   assert((await page('/platform/banners')).includes('请使用平台管理员账号'), 'logout removes the platform workspace');
-  console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, draft/publish, signup/cancel, notifications/read state and failure disclosure. Mock HTTP + SSR, not a real browser.');
+  const newAccount = { username: 'profile_test', password: 'TestPassword123!', name: '资料测试学生', major: '软件工程' };
+  const created = await client.register(newAccount);
+  assert.equal(created.role, 'STUDENT');
+  assert.equal(business.user, null, 'registration does not pretend the user is logged in');
+  await assert.rejects(client.register(newAccount), /账号已存在/);
+  await client.login(newAccount.username, newAccount.password);
+  const updated = { name: '已更新的学生', major: '数字媒体', interests: ['摄影', '户外'], availableTime: '周三晚上' };
+  await client.saveProfile(updated);
+  assert.equal(business.user.name, updated.name, 'header name updates without re-login');
+  const ProfileEditor = (await server.ssrLoadModule('/src/community/CommunityProfileEditor.vue')).default;
+  const editor = await renderToString(createSSRApp(ProfileEditor, { profile: business.profile }));
+  assert(editor.includes('profile-name') && editor.includes('profile-major') && editor.includes('profile-time'));
+  assert(editor.includes('保存资料') && editor.includes('周三晚上') && editor.includes('aria-pressed="true"'));
+  assert(editor.includes('readonly') && editor.includes('maxlength="200"'), 'editor preserves immutable account and time limits');
+  const me = await page('/me');
+  assert(me.includes('编辑资料') && me.includes('周三晚上') && me.includes('摄影'));
+  const assistant = await page('/assistant');
+  assert(assistant.includes('当前账号兴趣：摄影、户外') && !assistant.includes('当前使用本浏览器兴趣'));
+  assert(assistant.includes('共同兴趣：摄影、户外'));
+  profileWriteFailure = true;
+  await assert.rejects(client.saveProfile({ ...updated, name: '未成功保存' }), /资料保存失败/);
+  assert.equal(business.profile.name, updated.name, 'failed save leaves confirmed data unchanged');
+  profileWriteFailure = false;
+  await client.refreshBusiness();
+  assert.equal(business.profile.availableTime, '周三晚上');
+  await client.logout();
+  assert.equal(business.profile, null);
+  assert(!(await page('/assistant')).includes('共同兴趣：'), 'logout never uses local demo interests in live mode');
+  await client.login(newAccount.username, newAccount.password);
+  assert.deepEqual(business.profile.interests, ['摄影', '户外'], 'profile survives a fresh session');
+  let releaseProfile;
+  delayProfileWrite = new Promise(resolve => { releaseProfile = resolve; });
+  const lateSave = client.saveProfile(updated);
+  await client.logout(); await client.login('photo_manager', 'test');
+  releaseProfile(); await assert.rejects(lateSave, /账号状态已变化/);
+  assert.equal(business.profile.id, manager.id, 'late save cannot overwrite another account profile');
+  await client.logout();
+  console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, activities, notifications, registration/profile persistence, failed save and late-response isolation. Mock HTTP + SSR, not a real browser.');
 } finally { await server.close(); }
