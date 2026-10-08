@@ -1,4 +1,5 @@
 export interface Club {
+  backendId?: number;
   id: string; name: string; category: string; mark: string; color: string;
   slogan: string; description: string; tags: string[]; members: number;
   schedule: string; place: string; requirements: string; recruiting: boolean;

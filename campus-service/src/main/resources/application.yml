@@ -1,6 +1,13 @@
 server:
   address: 127.0.0.1
   port: ${CAMPUS_PORT:8090}
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: CAMPUS_SESSION
+        http-only: true
+        same-site: lax
 spring:
   application:
     name: campus-service

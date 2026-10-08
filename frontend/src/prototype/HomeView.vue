@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { clubs } from './data';
+import { clubCatalog as clubs } from './business';
 import { state, dateLabel } from './store';
 import Icon from './Icon.vue';
 const upcoming = computed(() => state.activities.filter(a => a.status === 'published').slice(0, 3));

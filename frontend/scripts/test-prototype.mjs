@@ -7,7 +7,7 @@ const storage = new Map();
 Object.defineProperty(globalThis, 'crypto', { value: {}, configurable: true });
 globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-const server = await createServer({ configFile: false, plugins: [(await import('@vitejs/plugin-vue')).default()], server: { middlewareMode: true }, appType: 'custom' });
+const server = await createServer({ configFile: false, define: { 'import.meta.env.VITE_BUSINESS_API': JSON.stringify('false') }, plugins: [(await import('@vitejs/plugin-vue')).default()], server: { middlewareMode: true }, appType: 'custom' });
 let assertions = 0;
 function check(condition, label) { assert.ok(condition, label); assertions++; }
 try {

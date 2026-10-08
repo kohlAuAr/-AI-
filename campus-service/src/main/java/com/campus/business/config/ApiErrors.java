@@ -6,12 +6,24 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestControllerAdvice
 public class ApiErrors {
     private final ObjectMapper mapper;
 
     public ApiErrors(ObjectMapper mapper) { this.mapper = mapper; }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail validation(MethodArgumentNotValidException error) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "请完整填写信息，申请理由最多 500 字，审核意见最多 300 字");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail duplicate(DataIntegrityViolationException error) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "记录已存在或已被其他操作更新，请刷新后重试");
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ProblemDetail expectedError(ResponseStatusException error) {

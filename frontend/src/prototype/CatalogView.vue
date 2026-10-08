@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { clubs, categories } from './data';
+import { categories } from './data';
+import { clubCatalog as clubs } from './business';
 import { state, dateLabel, toggleFavorite } from './store';
 import Icon from './Icon.vue';
 const route = useRoute();
 const activityMode = computed(() => route.path === '/activities');
 const recruitmentMode = computed(() => route.path === '/recruitment');
 const category = ref('全部'); const keyword = ref(''); const openOnly = ref(false);
-const matchingClubs = computed(() => clubs.filter(c => (!recruitmentMode.value || c.recruiting) && (category.value === '全部' || c.category === category.value) && `${c.name} ${c.tags.join(' ')} ${c.description}`.includes(keyword.value.trim())));
-const activities = computed(() => state.activities.filter(a => a.status === 'published' && (category.value === '全部' || a.category === category.value) && (!openOnly.value || a.enrolled < a.capacity) && `${a.title} ${a.location} ${clubs.find(c => c.id === a.clubId)?.name}`.includes(keyword.value.trim())).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)));
+const matchingClubs = computed(() => clubs.value.filter(c => (!recruitmentMode.value || c.recruiting) && (category.value === '全部' || c.category === category.value) && `${c.name} ${c.tags.join(' ')} ${c.description}`.includes(keyword.value.trim())));
+const activities = computed(() => state.activities.filter(a => a.status === 'published' && (category.value === '全部' || a.category === category.value) && (!openOnly.value || a.enrolled < a.capacity) && `${a.title} ${a.location} ${clubs.value.find(c => c.id === a.clubId)?.name}`.includes(keyword.value.trim())).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)));
 </script>
 <template>
   <div class="p-page-heading"><p class="p-kicker">{{ activityMode ? 'CAMPUS EVENTS' : recruitmentMode ? 'JOIN SOMETHING YOU LOVE' : 'FIND YOUR COMMUNITY' }}</p><h1>{{ activityMode ? '把课余时间，留给喜欢的事。' : recruitmentMode ? '新故事，从加入一个社团开始。' : '在这里，找到同频的伙伴。' }}</h1><p>{{ activityMode ? '讲座、工作坊、户外和演出。选一场活动，走出日常。' : recruitmentMode ? '了解招新条件，表达你的兴趣。不需要完美的简历，带上热情就好。' : '从科技实践到文化艺术，每一种兴趣都有生长的地方。' }}</p></div>

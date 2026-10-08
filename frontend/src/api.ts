@@ -14,7 +14,15 @@ export interface Turn { question: string; answer: string; references: Citation[]
 export interface Reply extends Omit<Turn, 'question'> { conversationId: string }
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`/api${path}`, options);
+  const headers = new Headers(options.headers);
+  if (!['GET', 'HEAD', 'OPTIONS'].includes((options.method || 'GET').toUpperCase())) {
+    // Obtain a fresh token: login/logout rotate it. HttpOnly session cookies stay in the browser.
+    const sessionResponse = await fetch('/api/auth/session', { credentials: 'same-origin' });
+    if (!sessionResponse.ok) throw new Error('无法获取安全令牌，请检查校园服务');
+    const session = await sessionResponse.json() as { csrfHeader: string; csrfToken: string };
+    headers.set(session.csrfHeader, session.csrfToken);
+  }
+  const response = await fetch(`/api${path}`, { ...options, headers, credentials: 'same-origin' });
   if (!response.ok) {
     let message = `请求失败（${response.status}）`;
     try { const error = await response.json(); message = error.detail || error.message || message; }

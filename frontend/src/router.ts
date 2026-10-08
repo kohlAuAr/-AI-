@@ -11,6 +11,10 @@ import DetailView from './prototype/DetailView.vue';
 import PersonalView from './prototype/PersonalView.vue';
 import ManageView from './prototype/ManageView.vue';
 import HelpView from './prototype/HelpView.vue';
+import LoginView from './prototype/LoginView.vue';
+import BusinessPersonalView from './prototype/BusinessPersonalView.vue';
+import BusinessManageView from './prototype/BusinessManageView.vue';
+import { businessMode } from './prototype/business';
 
 export default createRouter({
   history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
@@ -22,10 +26,11 @@ export default createRouter({
     { path: '/clubs/:id', component: DetailView },
     { path: '/activities', component: CatalogView },
     { path: '/activities/:id', component: DetailView },
-    { path: '/me', component: PersonalView },
+    { path: '/me', component: businessMode ? BusinessPersonalView : PersonalView },
+    { path: '/login', component: LoginView },
     { path: '/messages', component: PersonalView },
-    { path: '/manage', component: ManageView },
-    { path: '/manage/:section(recruitment|members|activities|finance)', component: ManageView },
+    { path: '/manage', component: businessMode ? BusinessManageView : ManageView },
+    { path: '/manage/:section(recruitment|members|activities|finance)', component: businessMode ? BusinessManageView : ManageView },
     { path: '/assistant', component: HelpView },
     { path: '/guide', component: HelpView },
     { path: '/system', component: DashboardView },

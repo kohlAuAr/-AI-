@@ -2,15 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { createSessionClient } from './http-session.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5178';
-async function json(url, options) {
-  const response = await fetch(base + url, { ...options, signal: AbortSignal.timeout(10000) });
-  const body = await response.json();
-  assert.equal(response.status, 200, `${url}: ${JSON.stringify(body)}`);
-  return body;
-}
+const client = createSessionClient(base);
+const json = client.json;
 async function ready() {
   for (let attempt = 0; attempt < 40; attempt++) {
     try {
@@ -24,7 +21,7 @@ async function ready() {
 await ready();
 const system = await json('/api/system');
 assert.equal(system.security, 'LOCAL_DEMO_ONLY');
-assert(system.modules.some(module => module.key === 'recruitment' && module.status === 'PLANNED'));
+assert(system.modules.some(module => module.key === 'recruitment' && module.status === 'READY'));
 const clubs = await json('/api/clubs');
 assert(clubs.length >= 3 && clubs.every(club => club.demo));
 assert.equal((await json(`/api/clubs/${clubs[0].id}`)).id, clubs[0].id);
@@ -49,7 +46,7 @@ assert(reply.answer.includes('周六下午'));
 const history = await json(`/api/ai/conversations/${reply.conversationId}`);
 assert.equal(history.length, 1);
 assert.equal(history[0].references[0].documentId, reply.references[0].documentId);
-const invalid = await fetch(base + '/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: '' }) });
+const invalid = await client.request('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: '' }) });
 assert.equal(invalid.status, 400);
 const missing = await fetch(base + '/api/clubs/999999');
 assert.equal(missing.status, 404);
