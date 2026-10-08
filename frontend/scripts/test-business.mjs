@@ -7,9 +7,10 @@ globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 let user = null; let failure = false; let writes = 0; let notificationWriteFailure = false; let delayInbox = null;
 let registered = null, profileWriteFailure = false, delayProfileWrite = null;
+let recommendationFailure = false, delayRecommendation = null;
 const profiles = new Map();
 function profileFor(account) {
-  if (!profiles.has(account.id)) profiles.set(account.id, { ...account, interests: [], availableTime: '' });
+  if (!profiles.has(account.id)) profiles.set(account.id, { ...account, interests: [], availableTime: '', interestDescription: '' });
   return profiles.get(account.id);
 }
 const student = { id: 1, username: 'student', name: '林同学', major: '计算机科学', role: 'STUDENT', managedClubIds: [] };
@@ -34,6 +35,12 @@ globalThis.fetch = async (url, options = {}) => {
   if (method === 'POST') {
     assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
     writes++;
+    if (path === '/api/ai/recommendations') {
+      if (recommendationFailure) return Response.json({ detail: '语义推荐尚未配置 Embedding 模型' }, { status: 503 });
+      const result = { method: 'SEMANTIC_COSINE', items: [{ clubId: 10, slug: 'photo', name: '光影摄影社', description: '摄影入门与校园采风', requirements: '欢迎新手', schedule: '周三', place: '学生中心', score: 0.876 }] };
+      if (delayRecommendation) { const pause = delayRecommendation; delayRecommendation = null; await pause; }
+      return Response.json(result);
+    }
     if (notificationWriteFailure && path.includes('/notifications/')) return Response.json({ detail: '消息写入失败' }, { status: 409 });
     if (path.endsWith('/auth/register')) {
       const input = JSON.parse(options.body);
@@ -203,7 +210,7 @@ try {
   assert.equal(business.user, null, 'registration does not pretend the user is logged in');
   await assert.rejects(client.register(newAccount), /账号已存在/);
   await client.login(newAccount.username, newAccount.password);
-  const updated = { name: '已更新的学生', major: '数字媒体', interests: ['摄影', '户外'], availableTime: '周三晚上' };
+  const updated = { name: '已更新的学生', major: '数字媒体', interests: ['摄影', '户外'], availableTime: '周三晚上', interestDescription: '喜欢用手机记录校园生活，想学拍照和剪视频' };
   await client.saveProfile(updated);
   assert.equal(business.user.name, updated.name, 'header name updates without re-login');
   const ProfileEditor = (await server.ssrLoadModule('/src/community/CommunityProfileEditor.vue')).default;
@@ -211,11 +218,30 @@ try {
   assert(editor.includes('profile-name') && editor.includes('profile-major') && editor.includes('profile-time'));
   assert(editor.includes('保存资料') && editor.includes('周三晚上') && editor.includes('aria-pressed="true"'));
   assert(editor.includes('readonly') && editor.includes('maxlength="200"'), 'editor preserves immutable account and time limits');
+  assert(editor.includes('profile-interest-description') && editor.includes('maxlength="1000"') && editor.includes(updated.interestDescription), 'free-text interests use a labeled bounded textarea');
   const me = await page('/me');
   assert(me.includes('编辑资料') && me.includes('周三晚上') && me.includes('摄影'));
   const assistant = await page('/assistant');
-  assert(assistant.includes('当前账号兴趣：摄影、户外') && !assistant.includes('当前使用本浏览器兴趣'));
-  assert(assistant.includes('共同兴趣：摄影、户外'));
+  assert(assistant.includes('辅助标签：摄影、户外') && assistant.includes(updated.interestDescription));
+  assert(assistant.includes('按我的兴趣推荐') && !assistant.includes('共同兴趣：'), 'tag matches are not shown as semantic recommendations');
+  const recommendationClient = await server.ssrLoadModule('/src/community/recommendations.ts');
+  recommendationFailure = true;
+  await recommendationClient.loadRecommendations();
+  assert.equal(recommendationClient.recommendationState.items.length, 0, 'unconfigured model never falls back to mock clubs');
+  assert((await page('/assistant')).includes('尚未配置 Embedding 模型'));
+  recommendationFailure = false;
+  await recommendationClient.loadRecommendations();
+  assert((await page('/assistant')).includes('摄影入门与校园采风') && (await page('/assistant')).includes('不是录取概率'));
+  await client.saveProfile({ ...updated, interestDescription: '想学习编程' });
+  assert.equal(recommendationClient.recommendationState.items.length, 0, 'editing interests clears obsolete results');
+  let releaseRecommendation;
+  delayRecommendation = new Promise(resolve => { releaseRecommendation = resolve; });
+  const lateRecommendation = recommendationClient.loadRecommendations();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  await client.logout(); await client.login('photo_manager', 'test');
+  releaseRecommendation(); await lateRecommendation;
+  assert.equal(recommendationClient.recommendationState.items.length, 0, 'previous-account recommendation response is ignored');
+  await client.logout(); await client.login(newAccount.username, newAccount.password); await client.saveProfile(updated);
   profileWriteFailure = true;
   await assert.rejects(client.saveProfile({ ...updated, name: '未成功保存' }), /资料保存失败/);
   assert.equal(business.profile.name, updated.name, 'failed save leaves confirmed data unchanged');

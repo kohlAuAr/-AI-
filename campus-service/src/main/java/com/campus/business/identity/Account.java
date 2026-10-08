@@ -18,6 +18,8 @@ public class Account {
     private String role;
     @Column(length = 300)
     private String interestTags;
+    @Column(length = 1000)
+    private String interestDescription;
     @Column(length = 200)
     private String availableTime;
 
@@ -33,6 +35,8 @@ public class Account {
     public String getRole() { return role; }
     public String getInterestTags() { return interestTags == null ? "" : interestTags; }
     public String getAvailableTime() { return availableTime == null ? "" : availableTime; }
+    public String getInterestDescription() { return interestDescription == null ? "" : interestDescription; }
+    public void setInterestDescription(String description) { this.interestDescription = description; }
     public void updateProfile(String name, String major, String interestTags, String availableTime) {
         this.name = name; this.major = major; this.interestTags = interestTags; this.availableTime = availableTime;
     }

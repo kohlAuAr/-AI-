@@ -26,6 +26,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper) throws Exception {
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/ai/recommendations").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/auth/session", "/api/clubs", "/api/clubs/**", "/api/activities", "/api/activities/{id}", "/api/banners", "/api/banners/{id}/image", "/api/system", "/api/ai/**", "/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login", "/error").permitAll()

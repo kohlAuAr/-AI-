@@ -30,6 +30,10 @@ public class AiServiceClient {
         return client.post().uri("/internal/chat").body(body).retrieve().body(JsonNode.class);
     }
 
+    public JsonNode recommend(Map<String, Object> body) {
+        return client.post().uri("/internal/recommendations").body(body).retrieve().body(JsonNode.class);
+    }
+
     public JsonNode upload(String filename, byte[] bytes) {
         var body = new LinkedMultiValueMap<String, Object>();
         body.add("file", new ByteArrayResource(bytes) {

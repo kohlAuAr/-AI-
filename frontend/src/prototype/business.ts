@@ -7,8 +7,8 @@ import { toast, type Application } from './store';
 export const businessMode = !publicPreview && import.meta.env.VITE_BUSINESS_API !== 'false';
 interface User { id: number; username: string; name: string; major: string; role: 'STUDENT' | 'MANAGER' | 'PLATFORM_ADMIN'; managedClubIds: number[] }
 interface Session { user: User | null; demoAccounts: boolean }
-export interface Profile { id: number; username: string; name: string; major: string; role: User['role']; interests: string[]; availableTime: string }
-export type ProfileInput = Pick<Profile, 'name' | 'major' | 'interests' | 'availableTime'>;
+export interface Profile { id: number; username: string; name: string; major: string; role: User['role']; interests: string[]; availableTime: string; interestDescription: string }
+export type ProfileInput = Pick<Profile, 'name' | 'major' | 'interests' | 'availableTime' | 'interestDescription'>;
 interface ApiClub { id: number; slug: string | null; name: string; category: string; description: string; tags: string; recruiting: boolean; requirements: string; schedule: string; place: string; members: number }
 interface ApiApplication { id: number; clubId: number; userId: number; name: string; major: string; reason: string; status: Application['status']; feedback: string; createdAt: string }
 interface ApiMember { id: number; clubId: number; userId: number; name: string; major: string; role: string; joinedAt: string }

@@ -18,6 +18,7 @@ public class StatusController {
     public Map<String, Object> status() {
         return Map.of("mode", settings.mode().name(), "knowledgeDocuments", documents.count(),
                 "retrieval", settings.modelEnabled() ? "KEYWORD_VECTOR_WHEN_INDEXED" : "KEYWORD",
+                "recommendation", settings.modelEnabled() && !settings.embedding().model().isBlank() ? "SEMANTIC_CONFIGURED_NOT_HEALTH_CHECKED" : "EMBEDDING_NOT_CONFIGURED",
                 "sessionStore", settings.redisEnabled() ? "DATABASE_WITH_REDIS_CACHE" : "DATABASE",
                 "scope", "PUBLIC_DEMO", "agent", "PLANNED");
     }

@@ -22,5 +22,6 @@ public class ProfileController {
                                   @NotBlank @Size(max = 40) String name, @NotBlank @Size(max = 80) String major) {}
     public record ProfileRequest(@NotBlank @Size(max = 40) String name, @NotBlank @Size(max = 80) String major,
                                  @NotNull @Size(max = 12) List<@NotBlank @Size(max = 20) String> interests,
-                                 @NotNull @Size(max = 200) String availableTime) {}
+                                 @NotNull @Size(max = 200) String availableTime,
+                                 @Size(max = 1000) String interestDescription) {}
 }

@@ -18,7 +18,7 @@ public class SystemController {
                         new Module("identity", "身份与权限", "READY", "学生注册、个人资料与兴趣、Session 登录、BCrypt、CSRF及所属社团权限"),
                         new Module("recruitment", "招新与社员", "READY", "招新条件维护、入社申请、审核、撤回与数据库成员关系"),
                         new Module("registration", "活动报名", "READY", "账号绑定报名、取消、截止及名额约束、负责人名单与站内通知"),
-                        new Module("recommendation", "兴趣推荐", "PLANNED", "已有兴趣资料接口；推荐排序与业务条件过滤待实现"),
+                        new Module("recommendation", "兴趣推荐", "READY", "自由文本兴趣与社团向量排序接口已实现；需配置 Embedding，仅过滤招新开关，不自动判断文字资格或课表冲突"),
                         new Module("assistant", "活动策划", "PLANNED", "业务工具查询、草稿生成与人工确认"),
                         new Module("agent", "ReAct / MCP / DAG", "PLANNED", "核心业务稳定后逐项接入"),
                         new Module("notifications", "站内通知", "READY", "审核、报名及取消通知入库；账号隔离、分页与已读状态"),

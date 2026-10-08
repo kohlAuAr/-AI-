@@ -158,4 +158,10 @@
   .community-page-footer { padding: 8px 16px; }
   .community-page-footer span { margin-left: 0; }
 }
+.community-interest-description { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--community-text); font-size: 15px; line-height: 1.8; margin: 12px 0; }
+.community-semantic-row { display: flex; align-items: center; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--community-line); }
+.community-semantic-row > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.community-semantic-row h3 { color: var(--community-text); font-size: 16px; margin-bottom: 8px; }
+.community-semantic-row p, .community-semantic-row small { color: var(--community-muted); font-size: 13px; line-height: 1.8; }
+.community-semantic-row > .community-icon { flex-shrink: 0; width: 16px; color: var(--community-muted); }
 @media (prefers-reduced-motion: reduce) { .community-app *, .community-app *::after { scroll-behavior: auto !important; transition: none !important; } }

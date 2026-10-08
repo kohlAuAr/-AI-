@@ -33,11 +33,12 @@ public class ProfileService {
         if (tags.stream().anyMatch(tag -> tag.contains(","))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "单个兴趣标签不能含逗号");
         Account user = identity.current(principal);
         user.updateProfile(body.name().trim(), body.major().trim(), String.join(",", tags), body.availableTime().trim());
+        if (body.interestDescription() != null) user.setInterestDescription(body.interestDescription().trim());
         return view(user);
     }
     private Profile view(Account account) {
         List<String> tags = account.getInterestTags().isEmpty() ? List.of() : List.of(account.getInterestTags().split(","));
-        return new Profile(account.getId(), account.getUsername(), account.getName(), account.getMajor(), account.getRole(), tags, account.getAvailableTime());
+        return new Profile(account.getId(), account.getUsername(), account.getName(), account.getMajor(), account.getRole(), tags, account.getAvailableTime(), account.getInterestDescription());
     }
-    public record Profile(Long id, String username, String name, String major, String role, List<String> interests, String availableTime) {}
+    public record Profile(Long id, String username, String name, String major, String role, List<String> interests, String availableTime, String interestDescription) {}
 }

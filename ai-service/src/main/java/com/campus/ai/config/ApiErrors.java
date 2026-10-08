@@ -15,8 +15,10 @@ public class ApiErrors {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail invalidBody() {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "问题不能为空且最多 2000 字符，会话编号必须为 UUID");
+    public ProblemDetail invalidBody(MethodArgumentNotValidException error) {
+        String detail = error.getBindingResult().getFieldErrors().stream()
+                .map(field -> field.getField() + ": " + field.getDefaultMessage()).findFirst().orElse("请求参数格式不正确");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
