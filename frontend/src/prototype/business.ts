@@ -5,7 +5,7 @@ import { publicPreview } from './public';
 import { toast, type Application } from './store';
 
 export const businessMode = !publicPreview && import.meta.env.VITE_BUSINESS_API !== 'false';
-interface User { id: number; username: string; name: string; major: string; role: 'STUDENT' | 'MANAGER'; managedClubIds: number[] }
+interface User { id: number; username: string; name: string; major: string; role: 'STUDENT' | 'MANAGER' | 'PLATFORM_ADMIN'; managedClubIds: number[] }
 interface Session { user: User | null; demoAccounts: boolean }
 interface ApiClub { id: number; slug: string | null; name: string; category: string; description: string; tags: string; recruiting: boolean; requirements: string; schedule: string; place: string; members: number }
 interface ApiApplication { id: number; clubId: number; userId: number; name: string; major: string; reason: string; status: Application['status']; feedback: string; createdAt: string }

@@ -4,6 +4,7 @@ import { business, businessMode, clubCatalog, refreshBusiness } from '../prototy
 import { state, dateLabel } from '../prototype/store';
 import { activityState, refreshActivities, activityTime, registrationClosed } from './activities';
 import CommunityIcon from './CommunityIcon.vue';
+import CommunityBannerCarousel from './CommunityBannerCarousel.vue';
 const recruiting = computed(() => clubCatalog.value.filter(c => c.recruiting).slice(0, 3));
 const upcoming = computed(() => businessMode ? activityState.activities.slice(0, 3).map(a => ({ id: String(a.id), title: a.title, time: activityTime(a.startTime), location: a.location, full: a.enrolled >= a.capacity, closed: registrationClosed(a), club: clubCatalog.value.find(c => c.backendId === a.clubId)?.name }))
   : state.activities.filter(a => a.status === 'published').slice(0, 3).map(a => ({ id: a.id, title: a.title, time: `${dateLabel(a.date)} ${a.time}`, location: a.location, full: a.enrolled >= a.capacity, closed: Date.now() >= new Date(`${a.date}T${a.time}`).getTime(), club: clubCatalog.value.find(c => c.id === a.clubId)?.name })));
@@ -13,6 +14,7 @@ onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
   <div class="community-directory community-discover">
     <div class="community-page-title"><h1>发现</h1><RouterLink to="/messages">查看消息<CommunityIcon name="chevron" /></RouterLink></div>
     <p class="community-page-intro">看看校园里的社团，安排下一次活动。</p>
+    <CommunityBannerCarousel />
     <div class="community-discover-shortcuts">
       <RouterLink to="/recruitment"><CommunityIcon name="join" /><strong>社团招新</strong><span>查看加入条件</span></RouterLink>
       <RouterLink to="/activities"><CommunityIcon name="calendar" /><strong>近期活动</strong><span>找到想参加的活动</span></RouterLink>

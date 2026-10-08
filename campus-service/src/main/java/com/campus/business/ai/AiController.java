@@ -24,6 +24,7 @@ public class AiController {
 
     @PostMapping("/knowledge")
     public JsonNode upload(@RequestParam MultipartFile file) throws IOException {
+        if (file.getSize() > 128 * 1024) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE, "资料文件不能超过 128KB");
         return ai.upload(file.getOriginalFilename(), file.getBytes());
     }
 

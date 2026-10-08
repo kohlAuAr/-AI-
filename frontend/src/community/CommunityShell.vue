@@ -9,6 +9,7 @@ import { unreadNotices, useNotificationRefresh } from './notifications';
 import SystemShell from '../views/SystemShell.vue';
 import { publicPreview } from '../prototype/public';
 import './community-secondary.css';
+import './community-banners.css';
 const unread = computed(() => businessMode ? unreadNotices.value : state.notices.filter(n => !n.read).length);
 useNotificationRefresh();
 const route = useRoute();
@@ -42,7 +43,7 @@ async function signOut() { try { await logout(); toast('已退出登录'); } cat
     <div class="community-layout">
       <aside class="community-sidebar">
         <nav aria-label="学生端导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: current(item.path) }" :aria-current="current(item.path) ? 'page' : undefined"><CommunityIcon :name="item.icon" />{{ item.label }}</RouterLink></nav>
-        <div class="community-sidebar-footer"><RouterLink v-if="!businessMode || business.user?.role === 'MANAGER'" to="/manage">负责人工作台</RouterLink><RouterLink v-if="businessMode && business.user?.role === 'MANAGER'" to="/manage/activities">活动管理</RouterLink><RouterLink to="/guide">使用说明</RouterLink></div>
+        <div class="community-sidebar-footer"><RouterLink v-if="businessMode && business.user?.role === 'PLATFORM_ADMIN'" to="/platform/banners">首页内容管理</RouterLink><RouterLink v-if="!businessMode || business.user?.role === 'MANAGER'" to="/manage">负责人工作台</RouterLink><RouterLink v-if="businessMode && business.user?.role === 'MANAGER'" to="/manage/activities">活动管理</RouterLink><RouterLink to="/guide">使用说明</RouterLink></div>
       </aside>
       <main class="community-main">
         <nav v-if="manager" class="community-workspace-nav" aria-label="负责人导航"><RouterLink v-for="item in adminLinks" :key="item.path" :to="item.path" :class="{ current: route.path === item.path }" :aria-current="route.path === item.path ? 'page' : undefined">{{ item.label }}</RouterLink></nav>

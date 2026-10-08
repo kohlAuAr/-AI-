@@ -1,0 +1,43 @@
+.community-banner-section { margin: 0 24px 24px; }
+.community-banner-slide { display: block; position: relative; overflow: hidden; border-radius: 10px; background: var(--community-bg); color: var(--community-text); }
+.community-banner-slide > img { width: 100%; height: auto; aspect-ratio: 12 / 5; object-fit: cover; display: block; }
+.community-banner-caption { position: absolute; left: 24px; top: 24px; max-width: 54%; padding: 10px 12px; border-radius: 6px; background: rgba(255,255,255,.93); }
+.community-banner-caption > span { font-size: 12px; color: #395747; }
+.community-banner-caption h2 { font-size: 22px; line-height: 1.45; margin: 6px 0; text-wrap: balance; overflow-wrap: anywhere; }
+.community-banner-caption p { font-size: 13px; color: #4a5750; }
+.community-banner-action { position: absolute; left: 24px; bottom: 16px; border-radius: 4px; padding: 6px 10px; font-size: 12px; background: rgba(255,255,255,.93); color: #395747; }
+.community-banner-controls { display: flex; align-items: center; justify-content: center; gap: 8px; padding-top: 4px; }
+.community-app .community-banner-controls button { min-width: 44px; min-height: 44px; cursor: pointer; font-size: 24px; color: var(--community-green); }
+.community-banner-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; }
+.community-app .community-banner-dots button { min-width: 28px; }
+.community-banner-dots span { display: inline-block; width: 6px; height: 6px; background: #a6afab; border-radius: 50%; }
+.community-banner-dots [aria-pressed="true"] span { width: 16px; border-radius: 4px; background: var(--community-green); }
+.community-banner-position { font-size: 12px; color: var(--community-muted); white-space: nowrap; }
+.community-app .community-banner-controls .community-banner-play { font-size: 13px; }
+.community-banner-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 16px; border-bottom: 1px solid var(--community-line); }
+.community-banner-toolbar > div { display: flex; align-items: center; gap: 12px; }
+.community-banner-toolbar > span { color: var(--community-muted); font-size: 13px; }
+.community-banner-row { display: flex; gap: 16px; margin: 0 24px; padding: 24px 0; border-bottom: 1px solid var(--community-line); }
+.community-banner-row > img { width: 160px; height: 90px; object-fit: cover; background: var(--community-bg); border-radius: 6px; }
+.community-banner-row-copy { flex: 1; min-width: 0; }
+.community-banner-row h2 { font-size: 16px; overflow-wrap: anywhere; }
+.community-banner-row p { font-size: 13px; color: var(--community-muted); margin-top: 6px; overflow-wrap: anywhere; }
+.community-banner-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 16px; }
+.community-banner-form input[type="file"] { padding: 10px; }
+.community-banner-form select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid #b6c2ba; border-radius: 4px; background: var(--community-white); color: var(--community-text); font: inherit; }
+.community-banner-form .community-section-description { padding: 0; font-size: 13px; }
+.community-banner-preview { display: block; width: 100%; height: auto; max-height: 260px; object-fit: contain; background: var(--community-bg); }
+.community-platform-page :is(input, select, textarea, button):focus-visible { outline: 2px solid var(--community-green); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .community-banner-section { margin: 0 16px 20px; }
+  .community-banner-caption { left: 12px; top: 12px; padding: 6px 8px; max-width: 56%; }
+  .community-banner-caption h2 { font-size: 17px; margin: 4px 0; }
+  .community-banner-caption > span { font-size: 11px; }
+  .community-banner-caption p { font-size: 12px; }
+  .community-banner-action { display: none; }
+  .community-banner-toolbar { padding: 0 16px 16px; }
+  .community-banner-row { margin: 0 16px; flex-direction: column; gap: 12px; }
+  .community-banner-row > img { width: 100%; height: auto; aspect-ratio: 12 / 5; }
+  .community-banner-row .community-record-heading { flex-wrap: wrap; }
+  .community-banner-form select { font-size: 16px; }
+}

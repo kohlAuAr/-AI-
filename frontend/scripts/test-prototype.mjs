@@ -65,7 +65,7 @@ try {
     ['/clubs/read', '招新已结束'], ['/clubs/not-found', '没有找到'],
     ['/recruitment', '加入条件'], ['/activities', '查看社团近期活动'],
     ['/activities/campus-photo', '报名参加'], ['/activities/green-campus', '名额已满'],
-    ['/activities/not-found', '没有找到'], ['/me', '你好'], ['/messages', '消息中心'], ['/login', '纯前端原型没有登录服务'],
+    ['/activities/not-found', '没有找到'], ['/me', '你好'], ['/messages', '消息中心'], ['/login', '纯前端原型没有登录服务'], ['/platform/banners', '原型模式没有平台管理服务'],
     ['/manage', '工作概览'], ['/manage/recruitment', '查看并审核'],
     ['/manage/members', '新增成员'], ['/manage/activities', '新建活动'],
     ['/manage/finance', '计划预算合计'], ['/assistant', '共同兴趣'], ['/guide', '原型'],

@@ -8,6 +8,7 @@ globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem
 let user = null; let failure = false; let writes = 0; let notificationWriteFailure = false; let delayInbox = null;
 const student = { id: 1, username: 'student', name: '林同学', major: '计算机科学', role: 'STUDENT', managedClubIds: [] };
 const manager = { id: 2, username: 'photo_manager', name: '摄影社负责人', major: '测试', role: 'MANAGER', managedClubIds: [10] };
+const platformAdmin = { id: 3, username: 'platform_admin', name: '首页管理员', major: '测试', role: 'PLATFORM_ADMIN', managedClubIds: [] };
 const applications = [];
 const members = [];
 const activities = [], registrations = [];
@@ -20,7 +21,7 @@ globalThis.fetch = async (url, options = {}) => {
     assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
     writes++;
     if (notificationWriteFailure && path.includes('/notifications/')) return Response.json({ detail: '消息写入失败' }, { status: 409 });
-    if (path.endsWith('/auth/login')) user = new URLSearchParams(options.body).get('username') === 'photo_manager' ? manager : student;
+    if (path.endsWith('/auth/login')) { const name = new URLSearchParams(options.body).get('username'); user = name === 'platform_admin' ? platformAdmin : name === 'photo_manager' ? manager : student; }
     else if (path.endsWith('/auth/logout')) user = null;
     else if (path.endsWith('/recruitment/applications')) applications.unshift({ id: 20, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', reason: JSON.parse(options.body).reason, status: 'pending', feedback: '', createdAt: '2026-10-04T10:00:00Z' });
     else if (path.endsWith('/review')) { applications[0].status = 'approved'; members.push({ id: 30, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', role: 'MEMBER', joinedAt: '2026-10-04T10:01:00Z' }); notify('APPLICATION_APPROVED', '入社申请已通过', '/me?tab=applications'); }
@@ -34,6 +35,7 @@ globalThis.fetch = async (url, options = {}) => {
     return Response.json({ status: 'OK' });
   }
   if (path.endsWith('/auth/session')) return Response.json({ user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf', demoAccounts: true });
+  if (path === '/api/platform/banners' || path === '/api/platform/banner-targets') { assert.equal(user?.role, 'PLATFORM_ADMIN', 'non-admin page must not fetch platform management data'); return Response.json([]); }
   if (path.startsWith('/api/notifications?')) { const mine = notices.filter(n => n.userId === user?.id); const response = Response.json({ items: mine, total: mine.length, unread: mine.filter(n => !n.readAt).length, page: 0, hasMore: false }); if (delayInbox) { const pause = delayInbox; delayInbox = null; await pause; } return response; }
   if (path === '/api/clubs') return Response.json([{ id: 10, slug: 'photo', name: '光影摄影社', category: '文化艺术', description: '后端社团介绍', tags: '摄影,户外', members: members.length, recruiting: true, requirements: '后端招新条件', schedule: '周三', place: '学生中心' }]);
   if (path.endsWith('/my-applications')) return Response.json(applications.filter(a => a.userId === user?.id));
@@ -79,6 +81,8 @@ try {
   assert(recruitment.includes('后端招新条件') && recruitment.includes('community-recruit-requirements'));
   assert((await page('/me')).includes('待审核'));
   assert((await page('/manage/recruitment')).includes('普通学生不能通过切换页面获得审核权限'));
+  assert((await page('/platform/banners')).includes('请使用平台管理员账号'), 'students cannot use platform management');
+  assert(!(await page('/me')).includes('首页内容管理'), 'student profile has no platform action');
   assert((await page('/clubs/photo')).includes('后端招新条件'));
   assert((await page('/clubs/photo')).includes('待审核'));
   await client.logout();
@@ -160,5 +164,12 @@ try {
   assert.equal(notificationClient.myNotices.value.length, 0, 'unavailable service never falls back to demo notices');
   assert((await page('/messages')).includes('消息暂时无法读取'));
   assert.equal(writes, 15);
+  failure = false; await client.login('platform_admin', 'test');
+  const platformPage = await page('/platform/banners');
+  assert(platformPage.includes('新增海报') && !platformPage.includes('请使用平台管理员账号'), 'platform role has a separate homepage workspace');
+  assert((await page('/me')).includes('平台管理员') && (await page('/me')).includes('首页内容管理'), 'mobile profile exposes the platform entry and correct role');
+  assert(!(await page('/me')).includes('负责人工作台'), 'platform role does not imply a club manager role');
+  await client.logout();
+  assert((await page('/platform/banners')).includes('请使用平台管理员账号'), 'logout removes the platform workspace');
   console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, draft/publish, signup/cancel, notifications/read state and failure disclosure. Mock HTTP + SSR, not a real browser.');
 } finally { await server.close(); }

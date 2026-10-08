@@ -23,8 +23,8 @@ spring:
       ddl-auto: update
   servlet:
     multipart:
-      max-file-size: 128KB
-      max-request-size: 160KB
+      max-file-size: 2MB
+      max-request-size: 3MB
 management:
   endpoints:
     web:
