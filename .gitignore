@@ -8,3 +8,11 @@ frontend/dist/
 .env
 .env.local
 **/application-local.yml
+frontend/dist-public/
+public-prototype/
+artifacts/
+.env.*
+!.env.example
+**/*.log
+**/*.mv.db
+**/*.trace.db
