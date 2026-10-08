@@ -63,7 +63,7 @@ try {
   const pages = [
     ['/', '正在招新的社团'], ['/clubs', '全部社团'], ['/clubs/photo', '光影摄影社'],
     ['/clubs/read', '招新已结束'], ['/clubs/not-found', '没有找到'],
-    ['/recruitment', '加入条件'], ['/activities', '查看社团近期活动'],
+    ['/recruitment', '加入条件'], ['/clubs?recruiting=true', '加入条件'], ['/activities', '查看社团近期活动'],
     ['/activities/campus-photo', '报名参加'], ['/activities/green-campus', '名额已满'],
     ['/activities/not-found', '没有找到'], ['/me', '你好'], ['/messages', '消息中心'], ['/login', '纯前端原型没有登录服务'], ['/platform/banners', '原型模式没有平台管理服务'],
     ['/manage', '工作概览'], ['/manage/recruitment', '查看并审核'],
@@ -78,6 +78,10 @@ try {
     const html = await renderToString(createSSRApp(App).use(router));
     check(html.includes(expected), `${path}: expected content ${expected}`);
     router.currentRoute.value.matched.forEach(record => covered.add(record.path));
+    if (path === '/') {
+      check(!html.includes('community-discover-shortcuts'), 'discover page omits duplicate shortcut cards');
+      check(html.includes('discover-clubs-title') && html.includes('discover-events-title'), 'discover page keeps club and activity sections');
+    }
     if (path === '/clubs') {
       check(html.includes('community-search'), 'community directory has labeled search');
       check(html.includes('aria-pressed="true"'), 'directory exposes selected category');
@@ -86,13 +90,16 @@ try {
       check(html.includes('community-bottom-nav') && !html.includes('p-header'), 'community uses a new navigation shell');
       check(!html.includes('找到同频') && !html.includes('directory-hero'), 'rejected marketing layout is absent');
       check((html.match(/class="community-club-row"/g) ?? []).length === 6, 'community displays six compact list rows');
+      check(html.includes('只看招新中'), 'club directory includes recruitment filter');
     }
     check(html.includes('community-app') && !html.includes('p-header') && !html.includes('app-shell'), `${path}: consistent community shell`);
     check(!html.includes('p-kicker') && !html.includes('p-hero') && !html.includes('p-detail-hero') && !html.includes('eyebrow'), `${path}: no old marketing headings`);
     check(html.includes('community-bottom-nav'), `${path}: persistent mobile navigation`);
     if (path.startsWith('/manage')) check(html.includes('aria-label="负责人导航"') && html.includes('经费台账'), `${path}: all manager destinations stay reachable`);
     if (router.currentRoute.value.path.startsWith('/system')) check(html.includes('aria-label="联调导航"') && html.includes('尚未完成私有资料权限隔离'), `${path}: development navigation and privacy boundary`);
-    if (path === '/recruitment') {
+    if (path === '/recruitment' || path === '/clubs?recruiting=true') {
+      check(router.currentRoute.value.fullPath === '/clubs?recruiting=true', 'recruitment entry resolves to club filter');
+      check(html.includes('<h1>社团</h1>'), 'recruitment stays inside the club directory');
       check(html.includes('community-search'), 'recruitment keeps labeled search');
       check(html.includes('community-recruit-requirements'), 'recruitment shows joining requirements');
       check(!html.includes('纸间读书会'), 'closed club is excluded from recruitment');
@@ -101,7 +108,8 @@ try {
     if (!router.currentRoute.value.path.startsWith('/system')) check(html.includes('非真实报名'), `${path}: prototype disclosure`);
     if (path === '/assistant') {
       const mobileNav = html.match(/<nav class="community-bottom-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
-      check((mobileNav.match(/<a /g) ?? []).length === 6, 'six mobile navigation items');
+      check((mobileNav.match(/<a /g) ?? []).length === 5, 'five mobile navigation items after recruitment merge');
+      check(!mobileNav.includes('href="/recruitment"'), 'no separate recruitment destination');
       check(/<a [^>]*href="\/assistant"[^>]*class="[^"]*current[^"]*"/.test(mobileNav), 'assistant navigation is selected');
       check(mobileNav.indexOf('活动</span>') < mobileNav.indexOf('助手</span>') && mobileNav.indexOf('助手</span>') < mobileNav.indexOf('我的</span>'), 'assistant appears between activities and profile');
       const desktopNav = html.match(/<nav aria-label="学生端导航"[\s\S]*?<\/nav>/)?.[0] ?? '';
@@ -109,6 +117,9 @@ try {
     }
     console.log(`PAGE PASS ${path}`);
   }
+  await router.push('/recruitment?source=banner&recruiting=false#club-list');
+  check(router.currentRoute.value.path === '/clubs' && router.currentRoute.value.query.recruiting === 'true', 'legacy route always selects recruiting clubs');
+  check(router.currentRoute.value.query.source === 'banner' && router.currentRoute.value.hash === '#club-list', 'legacy redirect preserves other query parameters and hash');
   for (const record of router.getRoutes().filter(record => record.components)) check(covered.has(record.path), `all page route patterns covered: ${record.path}`);
   console.log(`PASS ${assertions} assertions; ${pages.length} rendered routes. No real browser, backend or model required.`);
 } finally {

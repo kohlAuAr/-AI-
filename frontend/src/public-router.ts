@@ -17,7 +17,7 @@ export default createRouter({
     { path: '/', component: CommunityHomeView },
     { path: '/clubs', component: CommunityClubsView },
     { path: '/clubs/:id', component: DetailView },
-    { path: '/recruitment', component: CommunityClubsView },
+    { path: '/recruitment', redirect: to => ({ path: '/clubs', query: { ...to.query, recruiting: 'true' }, hash: to.hash }) },
     { path: '/activities', component: CatalogView },
     { path: '/activities/:id', component: DetailView },
     { path: '/me', component: CommunityPersonalView },

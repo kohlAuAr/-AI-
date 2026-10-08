@@ -15,13 +15,8 @@ onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
     <div class="community-page-title"><h1>发现</h1><RouterLink to="/messages">查看消息<CommunityIcon name="chevron" /></RouterLink></div>
     <p class="community-page-intro">看看校园里的社团，安排下一次活动。</p>
     <CommunityBannerCarousel />
-    <div class="community-discover-shortcuts">
-      <RouterLink to="/recruitment"><CommunityIcon name="join" /><strong>社团招新</strong><span>查看加入条件</span></RouterLink>
-      <RouterLink to="/activities"><CommunityIcon name="calendar" /><strong>近期活动</strong><span>找到想参加的活动</span></RouterLink>
-      <RouterLink to="/me"><CommunityIcon name="user" /><strong>我的记录</strong><span>申请与报名进度</span></RouterLink>
-    </div>
     <section aria-labelledby="discover-clubs-title">
-      <div class="community-section-heading"><h2 id="discover-clubs-title">正在招新的社团</h2><RouterLink to="/recruitment">查看全部<CommunityIcon name="chevron" /></RouterLink></div>
+      <div class="community-section-heading"><h2 id="discover-clubs-title">正在招新的社团</h2><RouterLink to="/clubs?recruiting=true">查看全部<CommunityIcon name="chevron" /></RouterLink></div>
       <div v-if="businessMode && business.error" class="community-list-message" role="alert"><h3>社团暂时加载失败</h3><p>{{ business.error }}</p><button type="button" @click="refreshBusiness">重新加载</button></div>
       <p v-else-if="businessMode && business.loading" class="community-list-loading" role="status">正在加载社团…</p>
       <template v-else>

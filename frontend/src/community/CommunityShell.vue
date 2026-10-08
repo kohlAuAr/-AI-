@@ -19,7 +19,7 @@ const secondary = computed(() => route.path === '/login' || route.path === '/gui
 const adminLinks = [{ path: '/manage', label: '工作概览' }, { path: '/manage/recruitment', label: '招新审核' }, { path: '/manage/members', label: '成员管理' }, { path: '/manage/activities', label: '活动管理' }, { path: '/manage/finance', label: '经费台账' }];
 const navigation = [
   { path: '/', label: '发现', icon: 'home' }, { path: '/clubs', label: '社团', icon: 'clubs' },
-  { path: '/recruitment', label: '招新', icon: 'join' }, { path: '/activities', label: '活动', icon: 'calendar' },
+  { path: '/activities', label: '活动', icon: 'calendar' },
   { path: '/assistant', label: '助手', icon: 'assistant' }, { path: '/me', label: '我的', icon: 'user' }
 ];
 const joinedClubs = computed(() => clubCatalog.value.filter(club => businessMode

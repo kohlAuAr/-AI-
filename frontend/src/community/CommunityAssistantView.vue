@@ -20,7 +20,7 @@ const recommended = computed(() => clubCatalog.value.filter(c => c.recruiting &&
       <div class="community-section-heading"><h2 id="assistant-knowledge-title">社团资料问答</h2></div>
       <p class="community-section-description">{{ publicPreview ? '纯前端预览暂不开放问答。先查看社团介绍与招新条件。' : '从已上传资料中检索答案，并查看原文出处。默认本地模式返回资料摘录。' }}</p>
       <template v-if="!publicPreview"><RouterLink to="/system/chat" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="assistant" /></span><div><strong>打开资料问答</strong><p>进入现有问答页面</p></div><CommunityIcon name="chevron" /></RouterLink><RouterLink to="/system/knowledge" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="read" /></span><div><strong>公开测试资料</strong><p>上传、查看和管理资料</p></div><CommunityIcon name="chevron" /></RouterLink></template>
-      <RouterLink v-else to="/recruitment" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="join" /></span><div><strong>查看招新条件</strong><p>先了解，再申请</p></div><CommunityIcon name="chevron" /></RouterLink>
+      <RouterLink v-else to="/clubs?recruiting=true" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="join" /></span><div><strong>查看招新条件</strong><p>先了解，再申请</p></div><CommunityIcon name="chevron" /></RouterLink>
     </section>
     <section class="community-assistant-boundary"><h2>哪些事情仍由你决定？</h2><p>申请、报名和发布仍需本人确认。语义推荐、自动策划与工具调用尚未开放，这里不会用预设回答冒充 AI。</p></section>
     <p class="community-list-disclosure">虚构测试资料 · {{ publicPreview ? '纯前端原型，非真实报名' : '问答需要校园服务与 AI 服务运行' }}</p>

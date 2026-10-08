@@ -65,6 +65,7 @@ try {
   async function page(path) { await router.push(path); await router.isReady(); return renderToString(createSSRApp(App).use(router)); }
   const directory = await page('/clubs');
   assert(directory.includes('community-search'));
+  assert(directory.includes('只看招新中'), 'club directory exposes recruitment filtering');
   assert(directory.includes('后端社团介绍') && directory.includes('学生中心'));
   assert(directory.includes('共 1 个'), 'directory counts backend clubs rather than prototype clubs');
   assert(!directory.includes('86 位成员'), 'directory does not substitute prototype member counts');
@@ -78,6 +79,8 @@ try {
   assert(loginPage.includes('autocomplete="username"') && loginPage.includes('autocomplete="current-password"'), 'login preserves password manager support');
   assert(loginPage.includes('community-demo-accounts') && !loginPage.includes('CAMPUS ACCOUNT'), 'demo accounts use a disclosure rather than a marketing panel');
   const recruitment = await page('/recruitment');
+  assert.equal(router.currentRoute.value.fullPath, '/clubs?recruiting=true', 'old recruitment route remains compatible');
+  assert(recruitment.includes('<h1>社团</h1>'), 'recruitment is a club directory filter, not a separate page');
   assert(recruitment.includes('后端招新条件') && recruitment.includes('community-recruit-requirements'));
   assert((await page('/me')).includes('待审核'));
   assert((await page('/manage/recruitment')).includes('普通学生不能通过切换页面获得审核权限'));

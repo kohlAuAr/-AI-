@@ -29,7 +29,7 @@ export default createRouter({
   routes: [
     { path: '/', component: CommunityHomeView },
     { path: '/clubs', component: CommunityClubsView },
-    { path: '/recruitment', component: CommunityClubsView },
+    { path: '/recruitment', redirect: to => ({ path: '/clubs', query: { ...to.query, recruiting: 'true' }, hash: to.hash }) },
     { path: '/clubs/:id', component: DetailView },
     { path: '/activities', component: businessMode ? CommunityActivitiesView : CatalogView },
     { path: '/activities/:id', component: businessMode ? CommunityActivityDetail : DetailView },
