@@ -8,5 +8,5 @@ const route = useRoute();
 </script>
 
 <template>
-  <SystemShell v-if="route.path.startsWith('/system')" /><CommunityShell v-else-if="route.path === '/clubs' || (businessMode && (route.path.startsWith('/activities') || route.path === '/manage/activities'))" /><PrototypeShell v-else />
+  <SystemShell v-if="route.path.startsWith('/system')" /><CommunityShell v-else-if="route.path === '/clubs' || (businessMode && (route.path.startsWith('/activities') || route.path === '/manage/activities' || route.path === '/messages'))" /><PrototypeShell v-else />
 </template>

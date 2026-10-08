@@ -5,30 +5,36 @@ import { renderToString } from '@vue/server-renderer';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-let user = null; let failure = false; let writes = 0;
+let user = null; let failure = false; let writes = 0; let notificationWriteFailure = false; let delayInbox = null;
 const student = { id: 1, username: 'student', name: '林同学', major: '计算机科学', role: 'STUDENT', managedClubIds: [] };
 const manager = { id: 2, username: 'photo_manager', name: '摄影社负责人', major: '测试', role: 'MANAGER', managedClubIds: [10] };
 const applications = [];
 const members = [];
 const activities = [], registrations = [];
+const notices = [];
+function notify(type, title, targetPath) { notices.unshift({ id: notices.length + 1, userId: 1, type, sourceId: 40, title, content: '数据库通知内容', targetPath, createdAt: '2026-10-05T10:00:00Z', readAt: null }); }
 globalThis.fetch = async (url, options = {}) => {
   if (failure) throw new Error('校园服务不可用');
   const path = String(url); const method = options.method || 'GET';
   if (method === 'POST') {
     assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
     writes++;
+    if (notificationWriteFailure && path.includes('/notifications/')) return Response.json({ detail: '消息写入失败' }, { status: 409 });
     if (path.endsWith('/auth/login')) user = new URLSearchParams(options.body).get('username') === 'photo_manager' ? manager : student;
     else if (path.endsWith('/auth/logout')) user = null;
     else if (path.endsWith('/recruitment/applications')) applications.unshift({ id: 20, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', reason: JSON.parse(options.body).reason, status: 'pending', feedback: '', createdAt: '2026-10-04T10:00:00Z' });
-    else if (path.endsWith('/review')) { applications[0].status = 'approved'; members.push({ id: 30, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', role: 'MEMBER', joinedAt: '2026-10-04T10:01:00Z' }); }
+    else if (path.endsWith('/review')) { applications[0].status = 'approved'; members.push({ id: 30, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', role: 'MEMBER', joinedAt: '2026-10-04T10:01:00Z' }); notify('APPLICATION_APPROVED', '入社申请已通过', '/me?tab=applications'); }
     else if (path.endsWith('/activities')) activities.push({ ...JSON.parse(options.body), id: 40, clubId: 10, enrolled: 0, status: 'DRAFT', demo: true });
     else if (path.endsWith('/publish')) activities[0].status = 'PUBLISHED';
-    else if (path.endsWith('/registrations/cancel')) { registrations[0].status = 'CANCELLED'; activities[0].enrolled = 0; }
-    else if (path.endsWith('/registrations')) { if (registrations.length) registrations[0].status = 'REGISTERED'; else registrations.push({ ...activities[0], id: 50, activityId: 40, userId: user.id, status: 'REGISTERED' }); activities[0].enrolled = 1; }
+    else if (path.endsWith('/registrations/cancel')) { registrations[0].status = 'CANCELLED'; activities[0].enrolled = 0; notify('ACTIVITY_CANCELLED', '活动报名已取消', '/activities/40'); }
+    else if (path.endsWith('/registrations')) { if (registrations.length) registrations[0].status = 'REGISTERED'; else registrations.push({ ...activities[0], id: 50, activityId: 40, userId: user.id, status: 'REGISTERED' }); activities[0].enrolled = 1; notify('ACTIVITY_REGISTERED', '活动报名成功', '/activities/40'); }
+    else if (path.endsWith('/notifications/read-all')) notices.filter(n => n.userId === user?.id).forEach(n => { n.readAt ||= '2026-10-05T10:01:00Z'; });
+    else if (/\/notifications\/\d+\/read$/.test(path)) notices.find(n => n.id === Number(path.split('/').at(-2)) && n.userId === user?.id).readAt ||= '2026-10-05T10:01:00Z';
     else throw new Error(`Unexpected POST ${path}`);
     return Response.json({ status: 'OK' });
   }
   if (path.endsWith('/auth/session')) return Response.json({ user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf', demoAccounts: true });
+  if (path.startsWith('/api/notifications?')) { const mine = notices.filter(n => n.userId === user?.id); const response = Response.json({ items: mine, total: mine.length, unread: mine.filter(n => !n.readAt).length, page: 0, hasMore: false }); if (delayInbox) { const pause = delayInbox; delayInbox = null; await pause; } return response; }
   if (path === '/api/clubs') return Response.json([{ id: 10, slug: 'photo', name: '光影摄影社', category: '文化艺术', description: '后端社团介绍', tags: '摄影,户外', members: members.length, recruiting: true, requirements: '后端招新条件', schedule: '周三', place: '学生中心' }]);
   if (path.endsWith('/my-applications')) return Response.json(applications.filter(a => a.userId === user?.id));
   if (path.endsWith('/memberships/mine')) return Response.json(members.filter(m => m.userId === user?.id));
@@ -96,8 +102,35 @@ try {
   assert.equal(activityClient.myRegistrations.value[0].status, 'CANCELLED');
   assert.equal(activityClient.activityState.activities[0].enrolled, 0);
   await activityClient.registerActivity(40);
+  const notificationClient = await server.ssrLoadModule('/src/community/notifications.ts');
+  await notificationClient.refreshNotifications();
+  assert.equal(notificationClient.unreadNotices.value, 4);
+  const messages = await page('/messages');
+  assert(messages.includes('活动报名成功') && messages.includes('入社申请已通过'));
+  assert(messages.includes('数据库通知内容') && !messages.includes('重要的消息'), 'live messages do not use prototype notices');
+  assert(messages.includes('community-message-row') && messages.includes('全部已读'));
+  assert(messages.includes('消息中心，4 条未读消息'), 'bell label uses the actual account unread count');
+  notificationWriteFailure = true;
+  assert.equal(await notificationClient.readNotice(4), false);
+  assert.equal(notificationClient.unreadNotices.value, 4, 'failed read is not optimistically marked as success');
+  assert(notificationClient.notificationState.writeError.includes('消息写入失败'));
+  notificationWriteFailure = false;
+  await notificationClient.readNotice(4);
+  assert.equal(notificationClient.unreadNotices.value, 3);
+  await notificationClient.readAllNotices();
+  assert.equal(notificationClient.unreadNotices.value, 0);
+  let releaseInbox;
+  delayInbox = new Promise(resolve => { releaseInbox = resolve; });
+  const lateResponse = notificationClient.refreshNotifications();
+  user = manager; business.user = manager;
+  await notificationClient.refreshNotifications();
+  releaseInbox(); await lateResponse;
+  assert.equal(notificationClient.myNotices.value.length, 0, 'a late previous-account response cannot overwrite the new inbox');
+  user = student; business.user = student; await notificationClient.refreshNotifications();
   business.user = null;
   assert.equal(activityClient.myRegistrations.value.length, 0, 'old account registrations are hidden immediately');
+  assert.equal(notificationClient.myNotices.value.length, 0, 'old account notifications are hidden immediately');
+  assert((await page('/messages')).includes('登录后查看消息'));
   business.user = student;
   failure = true;
   await client.refreshBusiness();
@@ -107,6 +140,9 @@ try {
   await activityClient.refreshActivities();
   assert.equal(activityClient.activityState.activities.length, 0, 'failure never displays mock activity data');
   assert(activityClient.activityState.error.includes('校园服务不可用'));
-  assert.equal(writes, 12);
-  console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, draft/publish, signup/cancel, memberships and failure disclosure. Mock HTTP + SSR, not a real browser.');
+  await notificationClient.refreshNotifications();
+  assert.equal(notificationClient.myNotices.value.length, 0, 'unavailable service never falls back to demo notices');
+  assert((await page('/messages')).includes('消息暂时无法读取'));
+  assert.equal(writes, 15);
+  console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, draft/publish, signup/cancel, notifications/read state and failure disclosure. Mock HTTP + SSR, not a real browser.');
 } finally { await server.close(); }

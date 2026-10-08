@@ -3,6 +3,7 @@ package com.campus.business.activity;
 import com.campus.business.identity.*;
 import com.campus.business.membership.MembershipRepository;
 import com.campus.business.registration.*;
+import com.campus.business.notification.NotificationService;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,10 +20,12 @@ public class ActivityService {
     private final IdentityService identity;
     private final MembershipRepository memberships;
     private final AccountRepository accounts;
+    private final NotificationService notifications;
     public ActivityService(ActivityRepository activities, RegistrationRepository registrations, IdentityService identity,
-                           MembershipRepository memberships, AccountRepository accounts) {
+                           MembershipRepository memberships, AccountRepository accounts, NotificationService notifications) {
         this.activities = activities; this.registrations = registrations; this.identity = identity;
         this.memberships = memberships; this.accounts = accounts;
+        this.notifications = notifications;
     }
     public List<ActivityView> published() { return activities.findByStatusOrderByStartTimeAsc("PUBLISHED").stream().map(this::view).toList(); }
     public ActivityView detail(Long id) {
@@ -57,7 +60,9 @@ public class ActivityService {
         if (registration != null && registration.getStatus().equals("REGISTERED")) throw conflict("你已报名，请勿重复提交");
         if (registrations.countByActivityIdAndStatus(id, "REGISTERED") >= activity.getCapacity()) throw conflict("活动名额已满");
         if (registration == null) registration = new Registration(id, student.getId()); else registration.activate();
-        return registrationView(registrations.saveAndFlush(registration));
+        registration = registrations.saveAndFlush(registration);
+        notifications.send(student.getId(), "ACTIVITY_REGISTERED", activity.getId(), "活动报名成功", "你已报名「" + activity.getTitle() + "」，可查看活动时间与地点。", "/activities/" + activity.getId());
+        return registrationView(registration);
     }
     @Transactional
     public RegistrationView cancel(Principal principal, Long id) {
@@ -67,7 +72,9 @@ public class ActivityService {
         Registration registration = registrations.findByActivityIdAndUserId(id, student.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "你没有该活动的报名记录"));
         if (!registration.getStatus().equals("REGISTERED")) throw conflict("报名已取消，请刷新列表");
-        registration.cancel(); return registrationView(registration);
+        registration.cancel();
+        notifications.send(student.getId(), "ACTIVITY_CANCELLED", activity.getId(), "活动报名已取消", "你已取消「" + activity.getTitle() + "」的报名，名额已释放。", "/activities/" + activity.getId());
+        return registrationView(registration);
     }
     public List<RegistrationView> mine(Principal principal) {
         return registrations.findByUserIdOrderByIdDesc(identity.current(principal).getId()).stream().map(this::registrationView).toList();

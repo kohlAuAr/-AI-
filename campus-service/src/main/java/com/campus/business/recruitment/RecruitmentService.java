@@ -3,6 +3,7 @@ package com.campus.business.recruitment;
 import com.campus.business.club.*;
 import com.campus.business.identity.*;
 import com.campus.business.membership.*;
+import com.campus.business.notification.NotificationService;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
@@ -19,10 +20,12 @@ public class RecruitmentService {
     private final ClubRepository clubs;
     private final ApplicationRepository applications;
     private final MembershipRepository memberships;
+    private final NotificationService notifications;
     public RecruitmentService(IdentityService identity, AccountRepository accounts, ClubRepository clubs,
-                              ApplicationRepository applications, MembershipRepository memberships) {
+                              ApplicationRepository applications, MembershipRepository memberships, NotificationService notifications) {
         this.identity = identity; this.accounts = accounts; this.clubs = clubs;
         this.applications = applications; this.memberships = memberships;
+        this.notifications = notifications;
     }
     @Transactional
     public ApplicationView apply(Principal principal, Long clubId, String reason) {
@@ -54,6 +57,9 @@ public class RecruitmentService {
             memberships.saveAndFlush(new Membership(application.getUserId(), application.getClubId(), "MEMBER"));
         }
         application.review(approved, feedback == null ? "" : feedback.trim(), reviewer.getId());
+        String name = clubs.findById(application.getClubId()).orElseThrow().getName();
+        notifications.send(application.getUserId(), approved ? "APPLICATION_APPROVED" : "APPLICATION_REJECTED", application.getId(),
+                approved ? "入社申请已通过" : "入社申请未通过", "「" + name + "」的申请" + (approved ? "已通过审核。" : "未通过审核。") + application.getFeedback(), "/me?tab=applications");
         return view(application);
     }
     @Transactional

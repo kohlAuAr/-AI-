@@ -2,6 +2,7 @@ import { computed, reactive } from 'vue';
 import { request, errorMessage } from '../api';
 import { business, businessMode } from '../prototype/business';
 import { toast } from '../prototype/store';
+import { refreshNotifications } from './notifications';
 
 export interface Activity { id: number; clubId: number; title: string; description: string; location: string; startTime: string; registrationDeadline: string; capacity: number; enrolled: number; status: 'DRAFT' | 'PUBLISHED'; demo: boolean }
 export interface Registration { id: number; activityId: number; clubId: number; title: string; startTime: string; location: string; status: 'REGISTERED' | 'CANCELLED'; registeredAt: string; cancelledAt: string | null }
@@ -34,6 +35,7 @@ async function mutate(path: string, body?: Draft) {
   try {
     await request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     await refreshActivities();
+    await refreshNotifications(0);
     toast(activityState.error ? '操作已保存，列表刷新失败，请重新加载' : '操作已保存到校园数据库');
     return true;
   } catch (error) { activityState.writeError = errorMessage(error); await refreshActivities(); return false; }

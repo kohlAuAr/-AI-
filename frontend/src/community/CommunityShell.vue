@@ -5,6 +5,9 @@ import { business, businessMode, clubCatalog, logout, refreshBusiness } from '..
 import { state, toast, ui } from '../prototype/store';
 import { errorMessage } from '../api';
 import CommunityIcon from './CommunityIcon.vue';
+import { unreadNotices, useNotificationRefresh } from './notifications';
+const unread = computed(() => businessMode ? unreadNotices.value : state.notices.filter(n => !n.read).length);
+useNotificationRefresh();
 const route = useRoute();
 function current(path: string) { return path === '/' ? route.path === '/' : route.path.startsWith(path); }
 const navigation = [
@@ -25,7 +28,7 @@ async function signOut() { try { await logout(); toast('已退出登录'); } cat
       <RouterLink to="/" class="community-brand"><CommunityIcon name="planet" /><strong>社遇</strong></RouterLink>
       <span class="community-topbar-label">校园社群</span>
       <div class="community-account-actions">
-        <RouterLink to="/messages" class="community-icon-action" aria-label="消息中心"><CommunityIcon name="bell" /></RouterLink>
+        <RouterLink to="/messages" class="community-icon-action" :aria-label="`消息中心，${unread} 条未读消息`"><CommunityIcon name="bell" /><span v-if="unread" class="community-notice-badge" aria-hidden="true">{{ unread > 99 ? '99+' : unread }}</span></RouterLink>
         <RouterLink v-if="businessMode && !business.user" to="/login" class="community-login">登录</RouterLink>
         <template v-else><RouterLink to="/me" class="community-user"><span>{{ businessMode ? business.user?.name.slice(0, 1) : '林' }}</span><b>{{ businessMode ? business.user?.name : state.profile.name }}</b></RouterLink><button v-if="businessMode" type="button" class="community-logout" @click="signOut">退出</button></template>
       </div>

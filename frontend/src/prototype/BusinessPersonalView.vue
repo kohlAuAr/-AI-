@@ -7,7 +7,7 @@ import Modal from './Modal.vue';
 import { activityState, myRegistrations, refreshActivities, activityTime } from '../community/activities';
 const route = useRoute();
 const tab = ref(route.query.tab === 'registrations' ? 'registrations' : 'applications'); const withdrawing = ref('');
-watch(() => route.query.tab, value => { if (value === 'registrations') tab.value = 'registrations'; });
+watch(() => route.query.tab, value => { if (value === 'registrations' || value === 'applications') tab.value = value; });
 onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
 async function withdraw() { if (await withdrawApplication(withdrawing.value)) withdrawing.value = ''; }
 </script>
@@ -22,7 +22,7 @@ async function withdraw() { if (await withdrawApplication(withdrawing.value)) wi
       <template v-else-if="tab === 'memberships'"><RouterLink v-for="item in business.memberships" :key="item.id" :to="`/clubs/${item.clubId}`" class="p-list-item"><div><h3>{{ clubs.find(c => c.id === item.clubId)?.name }}</h3><p>{{ item.date }} 加入 · 成员关系已保存到数据库</p></div><span class="p-chip green">{{ item.role === 'MANAGER' ? '负责人' : '社团成员' }}</span></RouterLink><div v-if="!business.memberships.length && !business.loading" class="p-empty"><h3>暂未加入社团</h3><p>负责人通过申请后，这里会出现你的社团。</p></div></template>
       <template v-else><p v-if="activityState.error" role="alert">{{ activityState.error }}。<button class="p-text-button" @click="refreshActivities">重新加载报名</button></p><p v-else-if="activityState.loading">正在读取报名…</p><template v-else><RouterLink v-for="item in myRegistrations" :key="item.id" :to="`/activities/${item.activityId}`" class="p-list-item"><div><h3>{{ item.title }}</h3><p>{{ activityTime(item.startTime) }} · {{ item.location }}</p></div><span class="p-chip" :class="item.status === 'REGISTERED' ? 'green' : 'gray'">{{ item.status === 'REGISTERED' ? '已报名' : '已取消' }}</span></RouterLink><div v-if="!myRegistrations.length" class="p-empty"><h3>暂无活动报名</h3><RouterLink to="/activities" class="p-button">看看已发布活动</RouterLink></div></template></template>
     </section>
-    <section class="p-panel"><h2>当前数据说明</h2><p>入社申请、成员关系、活动发布及报名来自数据库。收藏和消息仍为浏览器模拟，不会自动转成账号记录；所有账号与资料均为本地虚构数据。</p><RouterLink v-if="business.user.role === 'MANAGER'" to="/manage/activities" class="p-text-button">管理活动 ↗</RouterLink></section>
+    <section class="p-panel"><h2>当前数据说明</h2><p>入社申请、成员关系、活动发布、报名与站内通知来自数据库。收藏仍仅保存在本浏览器；所有账号与资料均为本地虚构数据。</p><RouterLink to="/messages" class="p-text-button">查看消息 ↗</RouterLink><RouterLink v-if="business.user.role === 'MANAGER'" to="/manage/activities" class="p-text-button">管理活动 ↗</RouterLink></section>
   </template>
   <Modal v-if="withdrawing" title="撤回这份申请？" persistent @close="withdrawing = ''"><p>只可撤回待审核申请。撤回记录会保留，可以再次申请。</p><button class="p-button" :disabled="business.saving" @click="withdraw">{{ business.saving ? '正在保存…' : '确认撤回' }}</button></Modal>
 </template>

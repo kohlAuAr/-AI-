@@ -19,6 +19,10 @@ try {
   await activities.refreshActivities();
   check(businessFetches === 0, 'pure prototype activity store never calls business APIs');
   check(activities.activityState.activities.length === 0, 'formal activity records stay separate from prototype data');
+  const notifications = await server.ssrLoadModule('/src/community/notifications.ts');
+  await notifications.refreshNotifications();
+  check(businessFetches === 0, 'pure prototype notification store never calls business APIs');
+  check(notifications.myNotices.value.length === 0, 'formal notices stay separate from browser mock notices');
   check(store.prototypeId().startsWith('demo-'), 'LAN HTTP ID fallback');
   check(!store.apply('photo', '  '), 'blank application rejected');
   check(store.apply('photo', '希望学习摄影'), 'application submitted');

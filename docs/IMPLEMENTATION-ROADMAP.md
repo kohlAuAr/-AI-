@@ -1,13 +1,13 @@
 # 从骨架到毕业设计的开发顺序
 
-当前已完成入社与活动发布/报名两条业务，分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`。每条跨页面验收，不要同时填写所有模块。
+当前已完成入社、活动发布/报名与站内通知三条业务，分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`。每条跨页面验收，不要同时填写所有模块。
 
 | 顺序 | 要补齐的内容 | 后端起点 | 前端起点 | 验收方式 |
 |---|---|---|---|---|
 | 1 | Session 登录与所属社团校验已实现；社团维护待做 | `identity`、`club` | `LoginView.vue` | 已验证登录与管理范围；不宣称维护已完成 |
 | 2 | 入社申请、审核、撤回和成员关系已实现；招新条件维护待做 | `recruitment`、`membership` | `BusinessPersonalView.vue`、`BusinessManageView.vue` | 已验证审核与成员事务、重复/越权拦截及重启保留 |
 | 3 | 活动草稿、发布、报名/取消及名单已实现；编辑、下架和签到待做 | `activity`、`registration` | `community/Community*Activit*.vue` | 已验证名额/截止/权限、取消释放及同 ID 重启保留，见活动验证记录 |
-| 4 | 站内通知 | 新增 `notification` | 新增结果通知入口 | 通知能回到对应申请或活动 |
+| 4 | 站内通知已实现；实时推送未做 | `notification` | `community/CommunityMessagesView.vue` | 业务与通知同事务、本人分页与已读、结果跳转及重启保留，见通知验证记录 |
 | 5 | 兴趣推荐 | 校园服务新增 `profile`；AI 服务新增 `recommendation` | 社团页增加推荐入口 | 对比关键词、语义、规则融合方案，不出现明确资格违规 |
 | 6 | 资料权限与正式持久化 | 扩展 AI 文档范围；完善 MySQL 迁移 | 知识库权限界面 | 跨社团资料不能被检索，重启保留问答及出处 |
 | 7 | 策划助手与人工确认 | AI 服务新增 `planning`；校园服务保存正式活动 | 新增草稿编辑与确认页 | 未确认不发布，事实来自业务查询 |

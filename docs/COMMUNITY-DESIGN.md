@@ -50,3 +50,5 @@ frontend-design 用于重新组织产品结构，而非套营销首页模板；U
 本次交付是社团列表及其导航外壳的重建，详情、招新、活动等页面仍为原风格。先确认这个方向，再决定是否扩展到其他页面。
 
 2026-10-05：用户已确认这一风格。第二条活动业务的列表、详情与活动管理继续使用该导航外壳及配色；其余页面未全站换肤。扩展记录见 `ACTIVITY-WORKFLOW.md` 和 `ACTIVITY-VERIFICATION.md`。
+
+同日第三条站内通知继续沿用该外壳：文字列表、简洁 SVG、明确已读文字与铃铛计数，不增加营销统计或 AI 装饰。frontend-design 保持信息层级，ui-ux-pro-max 检查带语境的未读提示及点击区；实际手机检查后补齐了 44px 文字按钮。记录见 `NOTIFICATION-WORKFLOW.md`、`NOTIFICATION-VERIFICATION.md`。
