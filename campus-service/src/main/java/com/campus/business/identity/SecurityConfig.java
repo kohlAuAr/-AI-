@@ -26,7 +26,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/api/auth/session", "/api/clubs", "/api/clubs/**", "/api/activities", "/api/system", "/api/ai/**", "/actuator/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/session", "/api/clubs", "/api/clubs/**", "/api/activities", "/api/activities/{id}", "/api/system", "/api/ai/**", "/actuator/health").permitAll()
                 .requestMatchers("/api/auth/login", "/error").permitAll()
                 // Existing AI development endpoints still use public synthetic data; data-scope authorization is pending.
                 .requestMatchers("/api/ai/**").permitAll()

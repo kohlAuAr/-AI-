@@ -17,7 +17,9 @@ public class ApiErrors {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validation(MethodArgumentNotValidException error) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "请完整填写信息，申请理由最多 500 字，审核意见最多 300 字");
+        String detail = error.getBindingResult().getFieldErrors().stream()
+                .map(field -> field.getField() + ": " + field.getDefaultMessage()).findFirst().orElse("请完整填写信息");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

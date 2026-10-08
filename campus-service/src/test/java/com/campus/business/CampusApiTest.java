@@ -16,7 +16,7 @@ class CampusApiTest {
     @Test
     void sampleListsAndPendingModulesAreHonest() throws Exception {
         mvc.perform(get("/api/clubs")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(6)).andExpect(jsonPath("$[0].demo").value(true));
-        mvc.perform(get("/api/activities")).andExpect(status().isOk()).andExpect(jsonPath("$[0].status").value("SAMPLE"));
+        mvc.perform(get("/api/activities")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/system")).andExpect(jsonPath("$.security").value("LOCAL_DEMO_ONLY"))
                 .andExpect(jsonPath("$.modules[3].status").value("READY"));
     }

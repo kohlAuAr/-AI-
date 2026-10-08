@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { activityState, refreshActivities } from '../community/activities';
 import { useRoute } from 'vue-router';
 import { clubCatalog as clubs, businessMode, business, submitApplication } from './business';
 import { state, apply, register, cancelRegistration, toggleFavorite, dateLabel, statusLabels } from './store';
@@ -11,7 +12,8 @@ const activity = computed(() => state.activities.find(a => a.id === route.params
 const club = computed(() => clubs.value.find(c => c.id === (activityMode.value ? activity.value?.clubId : route.params.id)));
 const application = computed(() => (businessMode ? business.applications : state.applications).find(a => a.mine && a.clubId === club.value?.id && ['pending', 'approved'].includes(a.status)));
 const joined = computed(() => businessMode && business.memberships.some(m => m.clubId === club.value?.id));
-const related = computed(() => state.activities.filter(a => a.clubId === club.value?.id && a.status === 'published'));
+const related = computed(() => businessMode ? activityState.activities.filter(a => a.clubId === club.value?.backendId).map(a => ({ ...a, date: a.startTime.slice(0, 10) })) : state.activities.filter(a => a.clubId === club.value?.id && a.status === 'published'));
+onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
 const registered = computed(() => !!activity.value && state.registrations.includes(activity.value.id));
 const started = computed(() => !!activity.value && new Date(`${activity.value.date}T${activity.value.time}`).getTime() <= Date.now());
 const modal = ref(''); const reason = ref(''); const consent = ref(false);

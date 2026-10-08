@@ -13,6 +13,12 @@ function check(condition, label) { assert.ok(condition, label); assertions++; }
 try {
   const store = await server.ssrLoadModule('/src/prototype/store.ts');
   const { state } = store;
+  const activities = await server.ssrLoadModule('/src/community/activities.ts');
+  let businessFetches = 0;
+  globalThis.fetch = async () => { businessFetches++; throw new Error('Pure prototype must not fetch business APIs'); };
+  await activities.refreshActivities();
+  check(businessFetches === 0, 'pure prototype activity store never calls business APIs');
+  check(activities.activityState.activities.length === 0, 'formal activity records stay separate from prototype data');
   check(store.prototypeId().startsWith('demo-'), 'LAN HTTP ID fallback');
   check(!store.apply('photo', '  '), 'blank application rejected');
   check(store.apply('photo', '希望学习摄影'), 'application submitted');

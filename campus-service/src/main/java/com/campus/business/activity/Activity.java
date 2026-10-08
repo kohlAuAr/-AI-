@@ -16,6 +16,11 @@ public class Activity {
     private int capacity;
     private String status;
     private boolean demo;
+    @Column(length = 2000)
+    private String description;
+    private LocalDateTime registrationDeadline;
+    private Long createdBy;
+    private LocalDateTime publishedAt;
 
     protected Activity() {}
 
@@ -30,6 +35,18 @@ public class Activity {
     }
 
     public Long getId() { return id; }
+    public static Activity draft(Long clubId, String title, String description, String location,
+                                 LocalDateTime startTime, LocalDateTime deadline, int capacity, Long creator) {
+        Activity activity = new Activity(clubId, title.trim(), location.trim(), startTime, capacity);
+        activity.description = description.trim(); activity.registrationDeadline = deadline;
+        activity.createdBy = creator; activity.status = "DRAFT";
+        return activity;
+    }
+    public void publish() { status = "PUBLISHED"; publishedAt = LocalDateTime.now(); }
+    public String getDescription() { return description; }
+    public LocalDateTime getRegistrationDeadline() { return registrationDeadline; }
+    public Long getCreatedBy() { return createdBy; }
+    public LocalDateTime getPublishedAt() { return publishedAt; }
     public Long getClubId() { return clubId; }
     public String getTitle() { return title; }
     public String getLocation() { return location; }

@@ -8,6 +8,9 @@ import RoadmapView from './views/RoadmapView.vue';
 import HomeView from './prototype/HomeView.vue';
 import CatalogView from './prototype/CatalogView.vue';
 import CommunityClubsView from './community/CommunityClubsView.vue';
+import CommunityActivitiesView from './community/CommunityActivitiesView.vue';
+import CommunityActivityDetail from './community/CommunityActivityDetail.vue';
+import CommunityManageActivities from './community/CommunityManageActivities.vue';
 import DetailView from './prototype/DetailView.vue';
 import PersonalView from './prototype/PersonalView.vue';
 import ManageView from './prototype/ManageView.vue';
@@ -25,12 +28,13 @@ export default createRouter({
     { path: '/clubs', component: CommunityClubsView },
     { path: '/recruitment', component: CatalogView },
     { path: '/clubs/:id', component: DetailView },
-    { path: '/activities', component: CatalogView },
-    { path: '/activities/:id', component: DetailView },
+    { path: '/activities', component: businessMode ? CommunityActivitiesView : CatalogView },
+    { path: '/activities/:id', component: businessMode ? CommunityActivityDetail : DetailView },
     { path: '/me', component: businessMode ? BusinessPersonalView : PersonalView },
     { path: '/login', component: LoginView },
     { path: '/messages', component: PersonalView },
     { path: '/manage', component: businessMode ? BusinessManageView : ManageView },
+    { path: '/manage/activities', component: businessMode ? CommunityManageActivities : ManageView },
     { path: '/manage/:section(recruitment|members|activities|finance)', component: businessMode ? BusinessManageView : ManageView },
     { path: '/assistant', component: HelpView },
     { path: '/guide', component: HelpView },

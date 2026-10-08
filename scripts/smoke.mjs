@@ -26,7 +26,7 @@ const clubs = await json('/api/clubs');
 assert(clubs.length >= 3 && clubs.every(club => club.demo));
 assert.equal((await json(`/api/clubs/${clubs[0].id}`)).id, clubs[0].id);
 const activities = await json('/api/activities');
-assert(activities.length >= 2 && activities.every(activity => activity.status === 'SAMPLE'));
+assert(activities.every(activity => activity.status === 'PUBLISHED'), 'Only published database activities are public; sample rows must not leak.');
 const status = await json('/api/ai/status');
 assert.equal(status.mode, 'LOCAL', 'This smoke test is for local mode; it must not call paid model APIs.');
 const fixture = await readFile(new URL('./fixtures/smoke-club.md', import.meta.url));

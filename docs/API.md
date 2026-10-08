@@ -17,7 +17,15 @@
 | GET | `/api/manage/clubs/{clubId}/applications` | 负责人查看本社团申请 |
 | GET | `/api/manage/clubs/{clubId}/members` | 负责人查看本社团成员，含负责人 |
 | POST | `/api/manage/applications/{id}/review` | approved 为必填布尔值，feedback 可选；校验该申请所属社团权限 |
-| GET | `/api/activities` | 示例活动列表 |
+| GET | `/api/activities` | 仅已发布活动及实时有效报名人数；匿名可读，草稿和 SAMPLE 不公开 |
+| GET | `/api/activities/{id}` | 已发布活动详情；未发布或不存在返回 404 |
+| GET | `/api/manage/clubs/{clubId}/activities` | 负责人查看本社团草稿与已发布活动 |
+| POST | `/api/manage/clubs/{clubId}/activities` | 保存活动草稿，校验本社团权限、必填项及时间 |
+| POST | `/api/manage/activities/{id}/publish` | 仅本社团负责人确认发布草稿；重复发布返回 409 |
+| POST | `/api/activities/{id}/registrations` | 当前学生账号报名；校验截止、状态、重复、容量 |
+| POST | `/api/activities/{id}/registrations/cancel` | 当前学生取消自己的报名；开始后不能取消 |
+| GET | `/api/registrations/mine` | 当前账号报名及取消记录，不接收 userId 参数 |
+| GET | `/api/manage/activities/{id}/registrations` | 本社团负责人读取当前有效报名名单，不公开给其他学生或社团 |
 | GET | `/api/ai/status` | AI 模式、资料数、会话存储模式 |
 | GET | `/api/ai/knowledge` | 已上传资料列表 |
 | GET | `/api/ai/knowledge/{id}` | 资料元数据与全文 |
@@ -39,4 +47,6 @@
 
 申请状态为 pending/approved/rejected/withdrawn。被拒或撤回后可新建申请，旧记录保留；已有待审核申请或已入社返回 409。审核与成员写入在同一事务中，重复审核返回 409。未登录返回 401，CSRF 错误或越权返回 403，记录不存在返回 404。
 
-错误采用 HTTP 状态码及 `detail` 文本。AI 服务不可用时返回 503，入社业务不调用 AI。活动报名、发布接口仍未实现，不提供假装成功的写操作占位。AI 开发接口目前仍为公开测试资料，仅限本地环境；新增入社权限不代表 AI 数据权限已经完成。
+活动草稿请求：`{"title":"手机摄影交流","description":"校园构图练习","location":"学生中心 204","startTime":"2026-10-17T14:00:00","registrationDeadline":"2026-10-16T18:00:00","capacity":30}`。名称最多 100 字、介绍最多 2000 字、地点最多 200 字、容量 1—500 人。时间为校园本地时间（当前本机 Asia/Hong_Kong）；截止须在未来且不晚于开始。草稿保存后还需单独发布，不存在自动发布行为。报名无需先加入社团；负责人账号不能报名。取消保留记录，重新报名复用同一用户—活动记录，再次校验截止及容量。
+
+错误采用 HTTP 状态码及 `detail` 文本。AI 服务不可用时返回 503，入社和活动发布/报名业务不调用 AI。活动编辑、下架、签到和通知待实现。AI 开发接口目前仍为公开测试资料，仅限本地环境；新增业务权限不代表 AI 数据权限已经完成。

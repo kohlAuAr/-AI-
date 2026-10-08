@@ -95,6 +95,49 @@
 .community-bottom-nav { display: none; }
 .community-toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); background: #303734; color: white; padding: 12px 18px; border-radius: 5px; font-size: 13px; z-index: 50; }
 .community-storage-note { padding: 12px 20px; background: #fff2e2; color: #765119; font-size: 13px; }
+.community-app .community-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border: 1px solid var(--community-green); background: var(--community-green); color: white; border-radius: 4px; font-size: 14px; }
+.community-app .community-button.secondary { background: white; color: var(--community-green); }
+.community-app button:disabled { opacity: .5; cursor: not-allowed; }
+.community-app .community-text-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--community-green); font-size: 13px; }
+.community-event-cover { background: #e5efe9; color: var(--community-green); display: flex; flex-direction: column; justify-content: center; }
+.community-event-cover span { font-size: 12px; }
+.community-event-cover strong { font-size: 25px; font-weight: 500; }
+.community-club-link > .community-icon { width: 16px; height: 16px; color: var(--community-muted); margin-top: 6px; }
+.community-back { display: flex; align-items: center; gap: 6px; min-height: 52px; padding: 0 24px; color: var(--community-muted); font-size: 13px; border-bottom: 1px solid var(--community-line); }
+.community-back .community-icon { width: 14px; height: 14px; transform: rotate(180deg); }
+.community-event-heading { padding: 24px; }
+.community-event-heading p { color: var(--community-muted); font-size: 13px; }
+.community-event-heading h1 { margin: 8px 0; font-size: 24px; font-weight: 600; overflow-wrap: anywhere; }
+.community-event-facts { margin: 0 24px; border-block: 1px solid var(--community-line); padding: 16px 0; }
+.community-event-facts > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); padding: 7px 0; gap: 12px; font-size: 14px; }
+.community-event-facts dt { color: var(--community-muted); }
+.community-event-facts dd { margin: 0; overflow-wrap: anywhere; }
+.community-event-description { padding: 24px; }
+.community-event-description h2, .community-event-form h2 { font-size: 17px; font-weight: 500; margin-bottom: 12px; }
+.community-event-description p { white-space: pre-wrap; line-height: 1.8; overflow-wrap: anywhere; }
+.community-event-actions { padding: 0 24px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.community-manager-toolbar { display: flex; align-items: end; gap: 16px; padding: 0 24px 20px; border-bottom: 1px solid var(--community-line); }
+.community-manager-toolbar label { flex: 1; font-size: 13px; color: var(--community-muted); min-width: 0; }
+.community-manager-toolbar select { display: block; width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid #c5cec9; background: white; color: var(--community-text); padding: 0 10px; font-size: 14px; border-radius: 4px; }
+.community-event-form { display: grid; gap: 16px; padding: 24px; border-bottom: 1px solid var(--community-line); }
+.community-event-form > p { color: var(--community-muted); font-size: 13px; }
+.community-event-form label { display: grid; gap: 8px; font-size: 14px; min-width: 0; }
+.community-event-form input, .community-event-form textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid #b6c2ba; border-radius: 4px; background: white; color: var(--community-text); font: inherit; }
+.community-form-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.community-managed-event { margin: 0 24px; padding: 24px 0; border-bottom: 1px solid var(--community-line); }
+.community-managed-event > p { font-size: 13px; line-height: 1.8; color: var(--community-muted); overflow-wrap: anywhere; }
+.community-participants { margin-top: 16px; padding: 16px; background: #f5f7f6; }
+.community-participants h4 { margin: 0 0 12px; font-size: 14px; font-weight: 500; }
+.community-participants p { margin-top: 12px; font-size: 14px; overflow-wrap: anywhere; }
+.community-participants small { color: var(--community-muted); }
+.community-dialog { width: 440px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 24px; border: 1px solid #d7ded9; border-radius: 6px; color: var(--community-text); }
+.community-dialog::backdrop { background: rgb(0 0 0 / .35); }
+.community-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.community-dialog h2 { font-size: 20px; font-weight: 500; }
+.community-dialog header button { width: 44px; height: 44px; flex-shrink: 0; }
+.community-dialog > p { font-size: 14px; line-height: 1.8; margin: 12px 0; overflow-wrap: anywhere; }
+.community-dialog-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.community-app .community-error { color: #9b342e; font-size: 14px; padding: 12px 0; overflow-wrap: anywhere; }
 @media (max-width: 1200px) { .community-layout { margin-inline: 24px; grid-template-columns: 144px minmax(0, 1fr) 224px; gap: 20px; } }
 @media (max-width: 1000px) { .community-layout { grid-template-columns: 144px minmax(0, 1fr); } .community-rightbar { display: none; } }
 @media (max-width: 760px) {
@@ -133,4 +176,15 @@
   .community-bottom-nav .current { color: var(--community-green); }
   .community-bottom-nav .community-icon { width: 21px; height: 21px; }
   .community-toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .community-back { padding-inline: 16px; }
+  .community-event-heading, .community-event-description, .community-event-form { padding: 20px 16px; }
+  .community-event-heading h1 { font-size: 22px; }
+  .community-event-facts { margin-inline: 16px; }
+  .community-event-actions { padding-inline: 16px; }
+  .community-manager-toolbar { padding: 0 16px 20px; flex-wrap: wrap; align-items: center; }
+  .community-manager-toolbar label { flex-basis: 100%; }
+  .community-manager-toolbar select, .community-event-form input, .community-event-form textarea { font-size: 16px; }
+  .community-form-columns { grid-template-columns: minmax(0, 1fr); }
+  .community-managed-event { margin-inline: 16px; }
+  .community-dialog { padding: 20px; }
 }

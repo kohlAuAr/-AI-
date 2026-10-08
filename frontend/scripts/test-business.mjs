@@ -10,6 +10,7 @@ const student = { id: 1, username: 'student', name: '林同学', major: '计算�
 const manager = { id: 2, username: 'photo_manager', name: '摄影社负责人', major: '测试', role: 'MANAGER', managedClubIds: [10] };
 const applications = [];
 const members = [];
+const activities = [], registrations = [];
 globalThis.fetch = async (url, options = {}) => {
   if (failure) throw new Error('校园服务不可用');
   const path = String(url); const method = options.method || 'GET';
@@ -20,6 +21,10 @@ globalThis.fetch = async (url, options = {}) => {
     else if (path.endsWith('/auth/logout')) user = null;
     else if (path.endsWith('/recruitment/applications')) applications.unshift({ id: 20, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', reason: JSON.parse(options.body).reason, status: 'pending', feedback: '', createdAt: '2026-10-04T10:00:00Z' });
     else if (path.endsWith('/review')) { applications[0].status = 'approved'; members.push({ id: 30, clubId: 10, userId: 1, name: '林同学', major: '计算机科学', role: 'MEMBER', joinedAt: '2026-10-04T10:01:00Z' }); }
+    else if (path.endsWith('/activities')) activities.push({ ...JSON.parse(options.body), id: 40, clubId: 10, enrolled: 0, status: 'DRAFT', demo: true });
+    else if (path.endsWith('/publish')) activities[0].status = 'PUBLISHED';
+    else if (path.endsWith('/registrations/cancel')) { registrations[0].status = 'CANCELLED'; activities[0].enrolled = 0; }
+    else if (path.endsWith('/registrations')) { if (registrations.length) registrations[0].status = 'REGISTERED'; else registrations.push({ ...activities[0], id: 50, activityId: 40, userId: user.id, status: 'REGISTERED' }); activities[0].enrolled = 1; }
     else throw new Error(`Unexpected POST ${path}`);
     return Response.json({ status: 'OK' });
   }
@@ -29,6 +34,9 @@ globalThis.fetch = async (url, options = {}) => {
   if (path.endsWith('/memberships/mine')) return Response.json(members.filter(m => m.userId === user?.id));
   if (path.endsWith('/applications')) return Response.json(applications);
   if (path.endsWith('/members')) return Response.json(members);
+  if (path === '/api/activities') return Response.json(activities.filter(a => a.status === 'PUBLISHED'));
+  if (path.endsWith('/activities')) return Response.json(activities);
+  if (path.endsWith('/registrations/mine')) return Response.json(registrations.filter(r => r.userId === user?.id));
   throw new Error(`Unexpected GET ${path}`);
 };
 const server = await createServer({ configFile: false, plugins: [(await import('@vitejs/plugin-vue')).default()], server: { middlewareMode: true }, appType: 'custom' });
@@ -66,16 +74,39 @@ try {
   await client.reviewApplication('20', true, '欢迎');
   assert.equal(business.managedMembers.length, 1);
   assert((await page('/manage/members')).includes('林同学'));
-  assert((await page('/manage/activities')).includes('尚未接入数据库'));
+  const activityClient = await server.ssrLoadModule('/src/community/activities.ts');
+  await activityClient.refreshActivities();
+  assert((await page('/manage/activities')).includes('新建活动'));
+  await activityClient.saveDraft(10, { title: '数据库摄影活动', description: '数据库活动说明', location: '学生中心', startTime: '2099-10-08T14:00', registrationDeadline: '2099-10-07T14:00', capacity: 2 });
+  assert.equal(activityClient.managedActivities.value[0].status, 'DRAFT');
+  assert.equal(activityClient.activityState.activities.length, 0, 'draft is not visible to students');
+  await activityClient.publishActivity(40);
+  assert((await page('/activities')).includes('数据库摄影活动'));
+  assert(!(await page('/activities')).includes('光影漫游'), 'normal mode does not use prototype activities');
   await client.logout(); await client.login('student', 'test');
   assert.equal(business.applications[0].status, 'approved');
   assert.equal(business.memberships[0].clubId, 'photo');
   assert((await page('/clubs/photo')).includes('已加入社团'));
+  await activityClient.refreshActivities();
+  await activityClient.registerActivity(40);
+  assert((await page('/activities/40')).includes('取消报名'));
+  assert.equal(activityClient.myRegistrations.value.length, 1);
+  assert((await page('/me?tab=registrations')).includes('数据库摄影活动'), 'my signup link opens the registration tab');
+  await activityClient.cancelActivityRegistration(40);
+  assert.equal(activityClient.myRegistrations.value[0].status, 'CANCELLED');
+  assert.equal(activityClient.activityState.activities[0].enrolled, 0);
+  await activityClient.registerActivity(40);
+  business.user = null;
+  assert.equal(activityClient.myRegistrations.value.length, 0, 'old account registrations are hidden immediately');
+  business.user = student;
   failure = true;
   await client.refreshBusiness();
   assert(business.error.includes('校园服务不可用'));
   assert.equal(business.applications.length, 0, 'failure does not fall back to fake requests');
   assert((await page('/me')).includes('不会自动切换成模拟申请'));
-  assert.equal(writes, 7);
-  console.log('PASS: live frontend data, CSRF, login/logout isolation, application, manager review, memberships and failure disclosure. Mock HTTP + SSR, not a real browser.');
+  await activityClient.refreshActivities();
+  assert.equal(activityClient.activityState.activities.length, 0, 'failure never displays mock activity data');
+  assert(activityClient.activityState.error.includes('校园服务不可用'));
+  assert.equal(writes, 12);
+  console.log('PASS: live frontend data, CSRF, identity isolation, recruitment, draft/publish, signup/cancel, memberships and failure disclosure. Mock HTTP + SSR, not a real browser.');
 } finally { await server.close(); }

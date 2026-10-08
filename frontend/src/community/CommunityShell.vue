@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { business, businessMode, clubCatalog, logout, refreshBusiness } from '../prototype/business';
 import { state, toast, ui } from '../prototype/store';
 import { errorMessage } from '../api';
 import CommunityIcon from './CommunityIcon.vue';
+const route = useRoute();
+function current(path: string) { return path === '/' ? route.path === '/' : route.path.startsWith(path); }
 const navigation = [
   { path: '/', label: '发现', icon: 'home' }, { path: '/clubs', label: '社团', icon: 'clubs' },
   { path: '/recruitment', label: '招新', icon: 'join' }, { path: '/activities', label: '活动', icon: 'calendar' },
@@ -13,6 +16,7 @@ const joinedClubs = computed(() => clubCatalog.value.filter(club => businessMode
   ? business.memberships.some(member => member.clubId === club.id)
   : state.applications.some(application => application.mine && application.clubId === club.id && application.status === 'approved')));
 onMounted(refreshBusiness);
+watch(() => route.path, refreshBusiness);
 async function signOut() { try { await logout(); toast('已退出登录'); } catch (error) { toast(errorMessage(error)); } }
 </script>
 <template>
@@ -28,8 +32,8 @@ async function signOut() { try { await logout(); toast('已退出登录'); } cat
     </header>
     <div class="community-layout">
       <aside class="community-sidebar">
-        <nav aria-label="学生端导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: item.path === '/clubs' }" :aria-current="item.path === '/clubs' ? 'page' : undefined"><CommunityIcon :name="item.icon" />{{ item.label }}</RouterLink></nav>
-        <div class="community-sidebar-footer"><RouterLink v-if="!businessMode || business.user?.role === 'MANAGER'" to="/manage">负责人工作台</RouterLink><RouterLink to="/guide">使用说明</RouterLink></div>
+        <nav aria-label="学生端导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: current(item.path) }" :aria-current="current(item.path) ? 'page' : undefined"><CommunityIcon :name="item.icon" />{{ item.label }}</RouterLink></nav>
+        <div class="community-sidebar-footer"><RouterLink v-if="!businessMode || business.user?.role === 'MANAGER'" to="/manage">负责人工作台</RouterLink><RouterLink v-if="businessMode && business.user?.role === 'MANAGER'" to="/manage/activities">活动管理</RouterLink><RouterLink to="/guide">使用说明</RouterLink></div>
       </aside>
       <main class="community-main"><RouterView /></main>
       <aside class="community-rightbar">
@@ -37,7 +41,7 @@ async function signOut() { try { await logout(); toast('已退出登录'); } cat
         <section class="community-side-section community-note"><h2>本地演示</h2><p>{{ businessMode ? '社团、申请与成员关系来自本地数据库，人物与资料均为虚构。' : '交互原型使用虚构数据，非真实报名。' }}</p><p>收藏仅保存在当前浏览器。</p></section>
       </aside>
     </div>
-    <nav class="community-bottom-nav" aria-label="手机底部导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: item.path === '/clubs' }" :aria-current="item.path === '/clubs' ? 'page' : undefined"><CommunityIcon :name="item.icon" /><span>{{ item.label }}</span></RouterLink></nav>
+    <nav class="community-bottom-nav" aria-label="手机底部导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: current(item.path) }" :aria-current="current(item.path) ? 'page' : undefined"><CommunityIcon :name="item.icon" /><span>{{ item.label }}</span></RouterLink></nav>
     <div v-if="ui.toast" class="community-toast" role="status">{{ ui.toast }}</div>
     <div v-if="ui.storageUnavailable" class="community-storage-note" role="alert">当前浏览器无法保存收藏，刷新后可能丢失。</div>
   </div>

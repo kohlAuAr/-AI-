@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { clubCatalog as clubs } from './business';
+import { clubCatalog as clubs, businessMode, business } from './business';
+import { activityState, refreshActivities } from '../community/activities';
+import { onMounted, watch } from 'vue';
 import { state, dateLabel } from './store';
 import Icon from './Icon.vue';
-const upcoming = computed(() => state.activities.filter(a => a.status === 'published').slice(0, 3));
+const upcoming = computed(() => businessMode ? activityState.activities.slice(0, 3).map(a => ({ ...a, date: a.startTime.slice(0, 10), time: a.startTime.slice(11, 16), clubId: clubs.value.find(c => c.backendId === a.clubId)?.id })) : state.activities.filter(a => a.status === 'published').slice(0, 3));
+onMounted(refreshActivities); watch(() => business.user?.id, refreshActivities);
 </script>
 <template>
   <section class="p-hero"><div class="p-hero-copy"><p class="p-kicker">HELLO, CAMPUS LIFE / 秋季社团招新</p><h1>你的热爱，<br>在这里<span>有回应。</span></h1><p class="p-hero-description">从一个兴趣开始，遇见一群同频的人。<br>发现社团，参与活动，书写属于你的校园故事。</p><div class="p-actions"><RouterLink to="/clubs" class="p-button">寻找我的社团<Icon name="arrow" /></RouterLink><RouterLink to="/activities" class="p-text-button">看看近期活动 ↗</RouterLink></div><div class="p-hero-caption"><span class="p-stacked-avatars"><i>光</i><i>山</i><i>♪</i></span><span>不必很厉害，也可以从喜欢开始。</span></div></div>
