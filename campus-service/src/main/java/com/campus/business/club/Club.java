@@ -50,4 +50,15 @@ public class Club {
     public void configureRecruitment(String slug, boolean recruiting, String requirements, String schedule, String place) {
         this.slug = slug; this.recruiting = recruiting; this.requirements = requirements; this.schedule = schedule; this.place = place;
     }
+    public static Club create(ClubManagementController.ClubRequest body) {
+        Club club = new Club(body.name().trim(), body.category().trim(), body.description().trim(), body.tags().trim(), body.campus().trim());
+        club.demo = false;
+        club.configureRecruitment(null, body.recruiting(), body.requirements().trim(), body.schedule().trim(), body.place().trim());
+        return club;
+    }
+    public void update(ClubManagementController.ClubRequest body) {
+        name = body.name().trim(); category = body.category().trim(); description = body.description().trim();
+        tags = body.tags().trim(); campus = body.campus().trim();
+        configureRecruitment(slug, body.recruiting(), body.requirements().trim(), body.schedule().trim(), body.place().trim());
+    }
 }

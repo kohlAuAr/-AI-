@@ -1,10 +1,10 @@
 # Campus club platform working agreement
 
-- This is a runnable framework, not a finished graduation project.
+- This is a runnable thesis project. The bounded campus backend is implemented; new frontend integrations and AI extensions remain unfinished.
 - Keep two independently running Spring Boot applications and one Vue frontend.
 - `campus-service` owns formal campus business data. `ai-service` owns knowledge chunks and conversations.
 - Demo data is public synthetic material. Do not describe it as real school data.
-- Session login, CSRF, scoped recruitment/review/withdrawal, memberships, activity draft/publish, registration/cancellation, scoped participant lists and persisted station notifications/read state are implemented. Account registration/recovery, activity editing/unpublishing/check-in, club editing, full AI document authorization, recommendation, ReAct, MCP and DAG remain planned.
+- Session login/CSRF, student registration/profiles/interests, manager-owned club creation/maintenance and recruitment toggles, scoped recruitment/review/withdrawal/memberships, activity draft/edit/publish/cancellation, signup/check-in, scoped participants, budget/expense/void summaries, account favorites and persisted notifications are implemented in campus-service. Password recovery, school SSO, payment/multi-level approvals, full AI document authorization, recommendation, ReAct, MCP and DAG remain planned.
 - Local mode uses keyword retrieval and excerpts. Do not call it LLM generation or semantic Embedding.
 - Normal developer mode connects club queries, login, recruitment, memberships, published activities, draft/publish, signup/cancellation and notifications to campus-service. Favorites remain browser-local. SAMPLE activities remain in the database but are not exposed as published events.
 - Pure prototype/public builds set VITE_BUSINESS_API=false, keep browser-local mock workflows, and must not call business APIs. Keep the saved prototype archive unchanged.
@@ -17,5 +17,9 @@
 - Verify the first business flow with `node scripts/check-recruitment.mjs`; after a campus restart use `node scripts/check-recruitment.mjs restored` to check the same saved record. These use synthetic demo accounts and do not delete existing records.
 - Verify the activity flow with `node scripts/check-activities.mjs`; after a campus restart use `node scripts/check-activities.mjs restored`. Flow mode retains a one-seat synthetic activity; it cancels/rejoins only that named test activity, never deletes existing data. Activities are open to all student accounts; places are free text, not a venue reservation system.
 - Verify notifications with `node scripts/check-notifications.mjs`; after restarting use `node scripts/check-notifications.mjs restored`. Flow mode creates a named synthetic activity and retained notifications; read-all changes only the student2 demo account. Do not backfill notifications for old business records or add queues/push without a new requirement.
+- Verify new campus backend APIs with `node scripts/check-campus-backend.mjs`; after restarting use `node scripts/check-campus-backend.mjs restored`. Flow creates a separate synthetic account/club/activities and retains all financial/audit records. Do not touch old recruitment/activity/notification smoke fixtures.
+- `restart-campus.ps1 -BackupData` restarts only the tracked campus process and copies the closed default H2 database; AI/frontend remain unchanged. Stop the campus process before repackaging its JAR on Windows. The backup switch is not a MySQL backup.
+- New backend features are not yet wired to frontend pages. Do not imply that registration, manager club maintenance, editing/cancellation/check-in, finance or server favorites already have user-facing controls. Preserve the saved prototype archive.
+- Check-in is a manager-controlled code, open no earlier than 30 minutes before start and manually closed. Places and available-time profiles are free text; no GPS, venue inventory or automatic scheduling. Expenses use decimal amounts and activity-scoped UUID requestId; corrections void retained records, never erase them.
 - Authentication uses Spring Security Session, not JWT. Never trust frontend role switches or caller-supplied userId. Demo accounts exist only under the demo profile; do not expose this local development system publicly.
 - Preserve upstream license and source attribution for adapted code.

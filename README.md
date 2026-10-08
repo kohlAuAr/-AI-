@@ -1,10 +1,12 @@
 # 校园社团活动管理与招新平台
 
-这是一个可启动、可联通的精简开发骨架。接下来在这份项目内逐项实现校园业务。
+这是一个可启动、可联通的精简毕业设计工程。校园业务后端已补齐本轮约定的范围，后续继续接入页面和 AI 能力。
 
-已实现：两个独立 Spring Boot 服务；Vue3 前端；数据库社团查询；Session 登录与所属社团权限；入社申请、审核、撤回和成员关系；活动草稿、确认发布、报名/取消、名额与截止校验、负责人报名名单；站内结果通知、账号隔离、分页与已读状态；公开 UTF-8 文本上传、分块、检索、出处展示和会话记录；可配置的真实模型与 Embedding 接口；可选 Redis 短期上下文。
+已实现：两个独立 Spring Boot 服务；Vue3 前端；学生注册、个人资料与兴趣接口；数据库社团查询及负责人创建/维护、招新开关与条件维护；Session 登录与所属社团权限；入社申请、审核、撤回和成员关系；活动草稿、编辑、确认发布、取消及报名者通知；报名/取消、名额与截止校验、负责人报名与签到名单；签到码开启/关闭与学生签到；活动预算、支出防重、作废留痕、社团汇总；账号收藏；站内结果通知、账号隔离、分页与已读状态；公开 UTF-8 文本上传、分块、检索、出处展示和会话记录；可配置的真实模型与 Embedding 接口；可选 Redis 短期上下文。
 
-待实现：注册、找回密码、正式学校身份认证、社团与招新条件维护、完整 AI 资料权限、活动编辑/下架/签到、兴趣推荐、AI 活动策划与人工确认、ReAct、MCP、DAG。当前页面明确区分数据库功能与演示功能。
+待实现：新增校园后端接口的页面接入、找回密码、正式学校身份认证、完整 AI 资料权限、兴趣推荐、AI 活动策划与人工确认、ReAct、MCP、DAG。当前页面明确区分数据库功能与演示功能。
+
+本次扩展仅修改校园后端，不改 AI 服务与前端设计。新增注册/资料、社团维护、活动编辑/取消/签到、经费和账号收藏已可通过 API 使用，但对应页面尚未接入；当前收藏页面仍是浏览器本地数据。范围、请求示例与源码路线见 [校园后端业务说明](docs/CAMPUS-BACKEND-WORKFLOW.md)，实际检查见 [校园后端验证](docs/CAMPUS-BACKEND-VERIFICATION.md)。
 
 ## 当前第一条真实业务
 
@@ -16,7 +18,7 @@
 
 ## 先看产品原型（支持手机浏览器）
 
-第二条数据库业务也已接通：负责人保存活动草稿 → 确认发布 → 学生报名/取消 → 负责人查看名单。打开 `http://127.0.0.1:5178/activities`，负责人入口 `/manage/activities`；账号沿用上述 demo 账号。面向全校学生，地点直接填文字，不包含场地预约、签到或经费审批。界面延续用户确认的白底社群列表风格。使用与代码链见 [活动业务说明](docs/ACTIVITY-WORKFLOW.md)，实际验收见 [活动验证](docs/ACTIVITY-VERIFICATION.md)。
+第二条数据库业务也已接通：负责人保存活动草稿 → 确认发布 → 学生报名/取消 → 负责人查看名单。打开 `http://127.0.0.1:5178/activities`，负责人入口 `/manage/activities`；账号沿用上述 demo 账号。面向全校学生，地点直接填文字，不包含场地预约或经费审批。现有页面尚无签到入口，签到后端已补齐。界面延续用户确认的白底社群列表风格。使用与代码链见 [活动业务说明](docs/ACTIVITY-WORKFLOW.md)，实际验收见 [活动验证](docs/ACTIVITY-VERIFICATION.md)。
 
 第三条通知链：审核结果、报名与取消成功 → 同一事务保存站内通知 → 消息中心查看相关记录、标为已读。打开 `/messages` 或顶部铃铛；没有实时推送，也不补造此前的历史通知。见 [通知业务说明](docs/NOTIFICATION-WORKFLOW.md) 和 [通知验证](docs/NOTIFICATION-VERIFICATION.md)。
 
@@ -55,6 +57,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\stop-dev.ps1
 
 启动和停止脚本只管理本项目登记的三个进程。启动前检查 8090、8091、5178 端口；日志在 `.run/`。没有修改原 PaiSmart。
 
+已完成打包后，仅重启校园服务可执行 `powershell -ExecutionPolicy Bypass -File .\scripts\restart-campus.ps1 -BackupData`，AI 和前端进程不动。`-BackupData` 在校园进程关闭后复制默认 H2 文件到 `.run/campus-backup-时间/`，不代替 MySQL 的备份方案。打包前需停止正在占用 JAR 的校园进程，完整停服务方式仍为上面的 `stop-dev.ps1`。
+
+校园后端新增接口联调：`node scripts/check-campus-backend.mjs`；重启后检查同一批记录：`node scripts/check-campus-backend.mjs restored`。首次运行会创建明确标注的虚构账号、社团和活动并保留记录，不改旧验收记录。
+
 ## IDEA 中怎么打开
 
 使用 IDEA 的 Open 打开根目录，导入根 `pom.xml`，项目 SDK 选择 Java 17。两个模块分别启动：
@@ -68,7 +74,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\stop-dev.ps1
 
 ```text
 campus-club-platform/
-├─ campus-service/  登录、社团查询、入社申请/审核/成员、活动发布/报名和 AI 转发
+├─ campus-service/  注册/资料、社团/招新、成员、活动/报名/签到、经费/收藏/通知和 AI 转发
 ├─ ai-service/      资料、分块、检索、模型客户端、会话记录
 ├─ frontend/        Vue3 页面与请求封装
 ├─ docs/            架构、接口、开发顺序与验证记录

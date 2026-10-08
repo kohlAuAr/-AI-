@@ -16,6 +16,10 @@ public class Account {
     private String major;
     @Column(nullable = false)
     private String role;
+    @Column(length = 300)
+    private String interestTags;
+    @Column(length = 200)
+    private String availableTime;
 
     protected Account() {}
     public Account(String username, String passwordHash, String name, String major, String role) {
@@ -27,4 +31,9 @@ public class Account {
     public String getName() { return name; }
     public String getMajor() { return major; }
     public String getRole() { return role; }
+    public String getInterestTags() { return interestTags == null ? "" : interestTags; }
+    public String getAvailableTime() { return availableTime == null ? "" : availableTime; }
+    public void updateProfile(String name, String major, String interestTags, String availableTime) {
+        this.name = name; this.major = major; this.interestTags = interestTags; this.availableTime = availableTime;
+    }
 }
