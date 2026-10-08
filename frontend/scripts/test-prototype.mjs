@@ -51,7 +51,7 @@ try {
   const router = (await server.ssrLoadModule('/src/router.ts')).default;
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
   const pages = [
-    ['/', '你的热爱'], ['/clubs', '找到同频'], ['/clubs/photo', '光影摄影社'],
+    ['/', '你的热爱'], ['/clubs', '全部社团'], ['/clubs/photo', '光影摄影社'],
     ['/clubs/read', '招新已结束'], ['/clubs/not-found', '没有找到'],
     ['/recruitment', '新故事'], ['/activities', '课余时间'],
     ['/activities/campus-photo', '报名参加'], ['/activities/green-campus', '名额已满'],
@@ -65,6 +65,16 @@ try {
     await router.push(path); await router.isReady();
     const html = await renderToString(createSSRApp(App).use(router));
     check(html.includes(expected), `${path}: expected content ${expected}`);
+    if (path === '/clubs') {
+      check(html.includes('community-search'), 'community directory has labeled search');
+      check(html.includes('aria-pressed="true"'), 'directory exposes selected category');
+      check(html.includes('周三') && html.includes('学生中心'), 'directory includes club schedule and place');
+      check(html.includes('收藏仅保存在当前浏览器'), 'directory discloses local favorites');
+      check(html.includes('community-bottom-nav') && !html.includes('p-header'), 'community uses a new navigation shell');
+      check(!html.includes('找到同频') && !html.includes('directory-hero'), 'rejected marketing layout is absent');
+      check((html.match(/class="community-club-row"/g) ?? []).length === 6, 'community displays six compact list rows');
+    }
+    if (path === '/recruitment' || path === '/activities') check(!html.includes('community-search'), `${path}: existing catalog preserved`);
     if (!router.currentRoute.value.path.startsWith('/system')) check(html.includes('非真实报名'), `${path}: prototype disclosure`);
     if (path === '/assistant') {
       const mobileNav = html.match(/<nav class="p-mobile-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';

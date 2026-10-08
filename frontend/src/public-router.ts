@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import HomeView from './prototype/HomeView.vue';
 import CatalogView from './prototype/CatalogView.vue';
+import CommunityClubsView from './community/CommunityClubsView.vue';
 import DetailView from './prototype/DetailView.vue';
 import PersonalView from './prototype/PersonalView.vue';
 import ManageView from './prototype/ManageView.vue';
@@ -12,7 +13,7 @@ export default createRouter({
   scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: '/', component: HomeView },
-    { path: '/clubs', component: CatalogView },
+    { path: '/clubs', component: CommunityClubsView },
     { path: '/clubs/:id', component: DetailView },
     { path: '/recruitment', component: CatalogView },
     { path: '/activities', component: CatalogView },

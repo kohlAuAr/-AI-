@@ -47,6 +47,11 @@ try {
   const router = (await server.ssrLoadModule('/src/router.ts')).default;
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
   async function page(path) { await router.push(path); await router.isReady(); return renderToString(createSSRApp(App).use(router)); }
+  const directory = await page('/clubs');
+  assert(directory.includes('community-search'));
+  assert(directory.includes('后端社团介绍') && directory.includes('学生中心'));
+  assert(directory.includes('共 1 个'), 'directory counts backend clubs rather than prototype clubs');
+  assert(!directory.includes('86 位成员'), 'directory does not substitute prototype member counts');
   assert((await page('/me')).includes('待审核'));
   assert((await page('/manage/recruitment')).includes('普通学生不能通过切换页面获得审核权限'));
   assert((await page('/clubs/photo')).includes('后端招新条件'));
