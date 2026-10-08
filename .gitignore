@@ -1,0 +1,10 @@
+**/target/
+**/node_modules/
+frontend/dist/
+**/data/
+.run/
+.idea/
+*.iml
+.env
+.env.local
+**/application-local.yml

@@ -1,0 +1,23 @@
+{
+  "name": "campus-club-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5178 --strictPort"
+  },
+  "dependencies": {
+    "vue": "3.5.13",
+    "vue-router": "4.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.17",
+    "@vitejs/plugin-vue": "5.2.4",
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vue-tsc": "2.2.10"
+  }
+}

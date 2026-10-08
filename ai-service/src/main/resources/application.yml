@@ -1,0 +1,46 @@
+server:
+  address: 127.0.0.1
+  port: ${AI_PORT:8091}
+spring:
+  application:
+    name: ai-service
+  profiles:
+    default: demo
+  datasource:
+    url: jdbc:h2:file:./data/ai;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ''
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:16379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+      connect-timeout: 2s
+  servlet:
+    multipart:
+      max-file-size: 128KB
+      max-request-size: 160KB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    redis:
+      enabled: ${AI_REDIS_ENABLED:false}
+ai:
+  mode: ${AI_MODE:local}
+  redis-enabled: ${AI_REDIS_ENABLED:false}
+  chat:
+    base-url: ${CHAT_BASE_URL:http://127.0.0.1:11434/v1}
+    model: ${CHAT_MODEL:}
+    api-key: ${CHAT_API_KEY:}
+  embedding:
+    base-url: ${EMBEDDING_BASE_URL:http://127.0.0.1:11434/v1}
+    model: ${EMBEDDING_MODEL:}
+    api-key: ${EMBEDDING_API_KEY:}

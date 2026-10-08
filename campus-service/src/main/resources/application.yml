@@ -1,0 +1,27 @@
+server:
+  address: 127.0.0.1
+  port: ${CAMPUS_PORT:8090}
+spring:
+  application:
+    name: campus-service
+  profiles:
+    default: demo
+  datasource:
+    url: jdbc:h2:file:./data/campus;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ''
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 128KB
+      max-request-size: 160KB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+campus:
+  ai-base-url: ${AI_SERVICE_URL:http://127.0.0.1:8091}
