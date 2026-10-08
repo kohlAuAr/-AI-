@@ -66,6 +66,17 @@ try {
   assert(directory.includes('后端社团介绍') && directory.includes('学生中心'));
   assert(directory.includes('共 1 个'), 'directory counts backend clubs rather than prototype clubs');
   assert(!directory.includes('86 位成员'), 'directory does not substitute prototype member counts');
+  for (const path of ['/', '/recruitment', '/assistant', '/me', '/login', '/clubs/photo', '/guide', '/manage', '/manage/recruitment', '/manage/members', '/manage/finance', '/manage/activities', '/activities', '/activities/40', '/messages', '/system', '/system/clubs', '/system/activities', '/system/knowledge', '/system/chat', '/system/roadmap']) {
+    const html = await page(path);
+    assert(html.includes('community-app') && !html.includes('p-header') && !html.includes('app-shell'), `${path} uses the accepted community shell`);
+    assert(!html.includes('p-hero') && !html.includes('p-kicker') && !html.includes('p-detail-hero') && !html.includes('eyebrow'), `${path} has no old marketing layout`);
+    assert(html.includes('community-bottom-nav'), `${path} preserves mobile navigation`);
+  }
+  const loginPage = await page('/login');
+  assert(loginPage.includes('autocomplete="username"') && loginPage.includes('autocomplete="current-password"'), 'login preserves password manager support');
+  assert(loginPage.includes('community-demo-accounts') && !loginPage.includes('CAMPUS ACCOUNT'), 'demo accounts use a disclosure rather than a marketing panel');
+  const recruitment = await page('/recruitment');
+  assert(recruitment.includes('后端招新条件') && recruitment.includes('community-recruit-requirements'));
   assert((await page('/me')).includes('待审核'));
   assert((await page('/manage/recruitment')).includes('普通学生不能通过切换页面获得审核权限'));
   assert((await page('/clubs/photo')).includes('后端招新条件'));
@@ -77,6 +88,11 @@ try {
   assert.equal(client.managedClubs.value.length, 1);
   assert.equal(business.managedApplications.length, 1);
   assert((await page('/manage/recruitment')).includes('查看并审核'));
+  for (const path of ['/manage', '/manage/recruitment', '/manage/members', '/manage/finance']) {
+    const html = await page(path);
+    assert(html.includes('community-secondary-page') && html.includes('负责人导航'));
+    assert(!html.includes('CLUB WORKSPACE') && !html.includes('每一份热爱'));
+  }
   await client.reviewApplication('20', true, '欢迎');
   assert.equal(business.managedMembers.length, 1);
   assert((await page('/manage/members')).includes('林同学'));

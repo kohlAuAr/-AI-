@@ -61,20 +61,23 @@ try {
   const router = (await server.ssrLoadModule('/src/router.ts')).default;
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
   const pages = [
-    ['/', '你的热爱'], ['/clubs', '全部社团'], ['/clubs/photo', '光影摄影社'],
+    ['/', '正在招新的社团'], ['/clubs', '全部社团'], ['/clubs/photo', '光影摄影社'],
     ['/clubs/read', '招新已结束'], ['/clubs/not-found', '没有找到'],
-    ['/recruitment', '新故事'], ['/activities', '课余时间'],
+    ['/recruitment', '加入条件'], ['/activities', '查看社团近期活动'],
     ['/activities/campus-photo', '报名参加'], ['/activities/green-campus', '名额已满'],
-    ['/activities/not-found', '没有找到'], ['/me', '你好'], ['/messages', '重要的消息'],
+    ['/activities/not-found', '没有找到'], ['/me', '你好'], ['/messages', '消息中心'], ['/login', '纯前端原型没有登录服务'],
     ['/manage', '工作概览'], ['/manage/recruitment', '查看并审核'],
     ['/manage/members', '新增成员'], ['/manage/activities', '新建活动'],
     ['/manage/finance', '计划预算合计'], ['/assistant', '共同兴趣'], ['/guide', '原型'],
-    ['/chat', '资料问答'], ['/knowledge', '上传资料'], ['/system', '刷新状态']
+    ['/chat', '资料问答'], ['/knowledge', '上传资料'], ['/system', '刷新状态'],
+    ['/system/clubs', '社团接口'], ['/system/activities', '活动接口'], ['/roadmap', '后续开发']
   ];
+  const covered = new Set();
   for (const [path, expected] of pages) {
     await router.push(path); await router.isReady();
     const html = await renderToString(createSSRApp(App).use(router));
     check(html.includes(expected), `${path}: expected content ${expected}`);
+    router.currentRoute.value.matched.forEach(record => covered.add(record.path));
     if (path === '/clubs') {
       check(html.includes('community-search'), 'community directory has labeled search');
       check(html.includes('aria-pressed="true"'), 'directory exposes selected category');
@@ -84,18 +87,29 @@ try {
       check(!html.includes('找到同频') && !html.includes('directory-hero'), 'rejected marketing layout is absent');
       check((html.match(/class="community-club-row"/g) ?? []).length === 6, 'community displays six compact list rows');
     }
-    if (path === '/recruitment' || path === '/activities') check(!html.includes('community-search'), `${path}: existing catalog preserved`);
+    check(html.includes('community-app') && !html.includes('p-header') && !html.includes('app-shell'), `${path}: consistent community shell`);
+    check(!html.includes('p-kicker') && !html.includes('p-hero') && !html.includes('p-detail-hero') && !html.includes('eyebrow'), `${path}: no old marketing headings`);
+    check(html.includes('community-bottom-nav'), `${path}: persistent mobile navigation`);
+    if (path.startsWith('/manage')) check(html.includes('aria-label="负责人导航"') && html.includes('经费台账'), `${path}: all manager destinations stay reachable`);
+    if (router.currentRoute.value.path.startsWith('/system')) check(html.includes('aria-label="联调导航"') && html.includes('尚未完成私有资料权限隔离'), `${path}: development navigation and privacy boundary`);
+    if (path === '/recruitment') {
+      check(html.includes('community-search'), 'recruitment keeps labeled search');
+      check(html.includes('community-recruit-requirements'), 'recruitment shows joining requirements');
+      check(!html.includes('纸间读书会'), 'closed club is excluded from recruitment');
+    }
+    if (path === '/activities') check(html.includes('community-search') && html.includes('只看有名额'), 'prototype activity filtering preserved in new list layout');
     if (!router.currentRoute.value.path.startsWith('/system')) check(html.includes('非真实报名'), `${path}: prototype disclosure`);
     if (path === '/assistant') {
-      const mobileNav = html.match(/<nav class="p-mobile-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
+      const mobileNav = html.match(/<nav class="community-bottom-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
       check((mobileNav.match(/<a /g) ?? []).length === 6, 'six mobile navigation items');
-      check(/<a [^>]*href="\/assistant"[^>]*class="[^"]*selected[^"]*"/.test(mobileNav), 'assistant navigation is selected');
+      check(/<a [^>]*href="\/assistant"[^>]*class="[^"]*current[^"]*"/.test(mobileNav), 'assistant navigation is selected');
       check(mobileNav.indexOf('活动</span>') < mobileNav.indexOf('助手</span>') && mobileNav.indexOf('助手</span>') < mobileNav.indexOf('我的</span>'), 'assistant appears between activities and profile');
-      const desktopNav = html.match(/<nav class="p-desktop-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
+      const desktopNav = html.match(/<nav aria-label="学生端导航"[\s\S]*?<\/nav>/)?.[0] ?? '';
       check(desktopNav.includes('href="/assistant"') && desktopNav.includes('助手</a>'), 'desktop navigation includes assistant');
     }
     console.log(`PAGE PASS ${path}`);
   }
+  for (const record of router.getRoutes().filter(record => record.components)) check(covered.has(record.path), `all page route patterns covered: ${record.path}`);
   console.log(`PASS ${assertions} assertions; ${pages.length} rendered routes. No real browser, backend or model required.`);
 } finally {
   await server.close();

@@ -1,5 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import HomeView from './prototype/HomeView.vue';
+import CommunityHomeView from './community/CommunityHomeView.vue';
+import CommunityPersonalView from './community/CommunityPersonalView.vue';
+import CommunityAssistantView from './community/CommunityAssistantView.vue';
 import CatalogView from './prototype/CatalogView.vue';
 import CommunityClubsView from './community/CommunityClubsView.vue';
 import DetailView from './prototype/DetailView.vue';
@@ -12,17 +14,17 @@ export default createRouter({
   history: createWebHashHistory(),
   scrollBehavior: () => ({ top: 0 }),
   routes: [
-    { path: '/', component: HomeView },
+    { path: '/', component: CommunityHomeView },
     { path: '/clubs', component: CommunityClubsView },
     { path: '/clubs/:id', component: DetailView },
-    { path: '/recruitment', component: CatalogView },
+    { path: '/recruitment', component: CommunityClubsView },
     { path: '/activities', component: CatalogView },
     { path: '/activities/:id', component: DetailView },
-    { path: '/me', component: PersonalView },
+    { path: '/me', component: CommunityPersonalView },
     { path: '/messages', component: PersonalView },
     { path: '/manage', component: ManageView },
     { path: '/manage/:section(recruitment|members|activities|finance)', component: ManageView },
-    { path: '/assistant', component: HelpView },
+    { path: '/assistant', component: CommunityAssistantView },
     { path: '/guide', component: HelpView },
     { path: '/:pathMatch(.*)*', redirect: '/guide' }
   ]

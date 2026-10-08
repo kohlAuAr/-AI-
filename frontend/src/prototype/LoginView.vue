@@ -16,8 +16,14 @@ async function submit() {
 }
 </script>
 <template>
-  <div class="p-page-heading"><p class="p-kicker">CAMPUS ACCOUNT</p><h1>登录，开始你的社团故事。</h1><p>身份和社团管理权限由后端确认，申请与审核结果保存到数据库。</p></div>
-  <div v-if="businessMode" class="p-two-columns"><section class="p-panel"><h2>账号登录</h2><form class="p-form" @submit.prevent="submit"><label>账号<input v-model="username" required maxlength="64" autocomplete="username" /></label><label>密码<input v-model="password" required type="password" autocomplete="current-password" /></label><p v-if="error" role="alert" class="p-form-error">{{ error }}</p><button class="p-button" :disabled="busy">{{ busy ? '正在登录…' : '登录' }}</button></form></section>
-    <section v-if="business.demoAccounts" class="p-panel"><h2>本地演示账号</h2><p>所有人物和社团资料为虚构数据；以下账号仅在 demo 配置中自动创建。</p><div class="p-list-item"><div><h3>学生：student / student2</h3><p>提交申请、查看审核结果与已加入社团。</p></div></div><div class="p-list-item"><div><h3>摄影社负责人：photo_manager</h3><p>仅可审核摄影社申请、查看该社团成员。</p></div></div><div class="p-list-item"><div><h3>程序设计协会负责人：code_manager</h3><p>用于验证不能管理其他社团。</p></div></div><p>演示密码：CampusDemo123!</p><p class="p-small">暂无注册、找回密码或正式学校身份认证。生产环境不得启用这些公开演示账号。</p></section></div>
-  <section v-else class="p-panel"><h2>纯前端原型没有登录服务</h2><p>请启动正常开发模式体验真实登录；此模式仍只展示浏览器模拟数据。</p></section>
+  <div class="community-login-page">
+    <div class="p-page-heading"><h1>账号登录</h1><p>登录后查看你的社团、申请和活动记录。</p></div>
+    <section v-if="businessMode" class="p-panel">
+      <p class="community-login-intro">学生与负责人使用同一个入口，管理权限由账号确定。</p>
+      <form class="p-form" @submit.prevent="submit"><label for="login-username">账号<input id="login-username" v-model="username" required maxlength="64" autocomplete="username" autocapitalize="none" :aria-describedby="error ? 'login-error' : undefined" /></label><label for="login-password">密码<input id="login-password" v-model="password" required type="password" autocomplete="current-password" :aria-describedby="error ? 'login-error' : undefined" /></label><p v-if="error" id="login-error" role="alert" class="p-form-error">{{ error }}</p><button class="p-button full" :disabled="busy">{{ busy ? '正在登录…' : '登录' }}</button></form>
+      <details v-if="business.demoAccounts" class="community-demo-accounts"><summary>查看本地演示账号</summary><dl><dt>学生账号</dt><dd>student / student2</dd><dt>摄影社负责人</dt><dd>photo_manager</dd><dt>程序设计协会负责人</dt><dd>code_manager</dd><dt>演示密码</dt><dd>CampusDemo123!</dd></dl><p>账号与资料均为虚构，仅在 demo 配置下创建。正式部署不得启用公开演示账号。</p></details>
+      <p class="p-small p-top-gap">本页面尚未接入注册、找回密码或学校统一身份认证。</p>
+    </section>
+    <section v-else class="p-panel"><h2>纯前端原型没有登录服务</h2><p>请启动正常开发模式体验真实登录；此模式仍只展示浏览器模拟数据。</p><RouterLink to="/clubs" class="p-button secondary">返回社团列表</RouterLink></section>
+  </div>
 </template>
