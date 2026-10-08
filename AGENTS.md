@@ -6,6 +6,8 @@
 - Demo data is public synthetic material. Do not describe it as real school data.
 - Authentication, club membership permissions, recruitment, approvals, registration, recommendation, ReAct, MCP and DAG remain planned unless implemented and verified.
 - Local mode uses keyword retrieval and excerpts. Do not call it LLM generation or semantic Embedding.
+- Product routes are a browser-local interactive prototype. Applications, reviews, membership, activity drafts/publishing and signup in these routes do not write the backend. Formal APIs remain planned. Preserve this disclosure.
+- Keep LAN prototype mode separate from local API integration: vite.prototype.config.ts has no business proxy; normal developer integration pages live under /system.
 - Keep model keys in environment variables or ignored local configuration. Never copy PaiSmart's credentials or database.
 - Do not edit or restart the original `C:/workspace/PaiSmart` project as part of this project.
 - Prefer small features across controller, service, persistence and frontend rather than empty abstractions.

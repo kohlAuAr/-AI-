@@ -6,6 +6,20 @@
 
 待实现：登录与权限、招新维护、入社申请与审核、成员关系、活动发布与报名、通知、兴趣推荐、活动策划与人工确认、ReAct、MCP、DAG。当前页面明确标注了示例与待实现状态。
 
+## 先看产品原型（支持手机浏览器）
+
+默认首页已改为“社遇”校园社团产品原型，包含学生端及负责人工作台。可以演示申请、审核、成员、活动草稿、发布、报名、收藏和消息；这些记录只保存在当前浏览器，**上述正式后端功能仍待实现**。AI 仅保留辅助入口。原有真实接口联调页迁至 `/system`。
+
+只看原型，不需要 Java、Redis 或大模型：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\workspace\campus-club-platform\scripts\start-prototype.ps1
+```
+
+先在 `frontend` 安装依赖。电脑打开 `http://127.0.0.1:5178/`；手机与电脑接入同一可互通局域网，打开终端显示的 `Network` 地址。局域网原型模式不转发后端 API；如需资料问答联调，停止原型后按下文启动标准开发服务。勿把开发端口发布到公网。完整说明见 [原型说明](docs/PROTOTYPE.md)。
+
+前端检查：`npm run build`、`npm run test:prototype`。测试覆盖状态逻辑与页面服务端渲染，不等于真机或浏览器点击验收。
+
 ## 先运行起来
 
 需要 Java 17、Maven、Node.js。后端沿用已有项目的 Spring Boot 3.4.2；前端采用 Vue 3.5.13 和 Vite 6.3.5。当前没有 Spring AI 依赖，通过独立模型客户端接入兼容接口。
