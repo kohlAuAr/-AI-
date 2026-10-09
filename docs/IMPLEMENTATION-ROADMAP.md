@@ -1,6 +1,6 @@
 # 从骨架到毕业设计的开发顺序
 
-当前入社、活动发布/报名、站内通知、首页轮播管理以及注册/个人资料已接入页面；社团维护、活动编辑/取消/签到、经费和账号收藏已具备后端，前端仍待补齐。分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`、`PLATFORM-BANNERS.md` 和 `ACCOUNT-PROFILE-WORKFLOW.md`。后续仍按一条业务从页面到接口逐项验收，不把菜单数量当作完成度。
+当前入社、活动发布/报名、站内通知、首页轮播管理、注册/个人资料和经费台账已接入页面；社团维护、活动编辑/取消/签到和账号收藏已具备后端，前端仍待补齐。分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`、`PLATFORM-BANNERS.md`、`ACCOUNT-PROFILE-WORKFLOW.md` 和 `FINANCE-WORKFLOW.md`。后续仍按一条业务从页面到接口逐项验收，不把菜单数量当作完成度。
 
 | 顺序 | 要补齐的内容 | 后端起点 | 前端起点 | 验收方式 |
 |---|---|---|---|---|
@@ -8,7 +8,7 @@
 | 2 | 招新与成员链已接入页面；招新条件维护 API 已实现，补编辑页面 | `recruitment`、`membership`、`club` | `BusinessPersonalView.vue`、`BusinessManageView.vue` | 审核与成员事务、重复/越权拦截、招新开关及重启保留 |
 | 3 | 活动草稿/发布/报名已接页面；编辑/取消/签到后端已实现，补页面 | `activity`、`registration` | `community/Community*Activit*.vue` | 有人报名不改时地、取消通知、码权限、签到防重与数据保留 |
 | 4 | 站内通知已实现；实时推送未做 | `notification` | `community/CommunityMessagesView.vue` | 业务与通知同事务、本人分页与已读、结果跳转及重启保留，见通知验证记录 |
-| 5 | 经费和账号收藏 API 已实现，补页面对接 | `finance`、`favorite` | 管理端经费页、收藏页 | 金额精度、同笔防重、作废留痕、跨账号隔离及重启保留 |
+| 5 | 经费台账页面已接入，账号收藏仍待页面对接 | `finance`、`favorite` | `/manage/finance`、收藏页 | 经费金额显示、同笔防重、作废留痕、跨账号隔离及重启保留；见 FINANCE-WORKFLOW.md |
 | 6 | 自由文本推荐已用本机模型联调，并加入 BM25/RRF；下一步固定样本效果评估 | `identity/ProfileService`、`ai/RecommendationController`；AI `recommendation` | `/me` 兴趣描述 → `/assistant` 获取推荐 | 当前仅校验招新开关；文字资格/时间仍由本人确认，见兴趣推荐说明 |
 | 7 | 公开资料 RAG 已接 Spring AI 聊天与 Embedding；资料权限与正式迁移待完成 | AI `knowledge`、`chat`；未来扩展文档范围及 MySQL 迁移 | `/system/knowledge` → `/system/chat` | 生成回答、原文引用、失败不留半成品、重启保留；当前不能上传私人资料，见 RAG-WORKFLOW.md |
 | 8 | 策划助手与人工确认 | AI 服务新增 `planning`；校园服务保存正式活动 | 草稿编辑与确认页 | 未确认不发布，事实来自业务查询 |

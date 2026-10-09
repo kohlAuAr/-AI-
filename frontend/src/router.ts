@@ -11,6 +11,7 @@ import CommunityClubsView from './community/CommunityClubsView.vue';
 import CommunityActivitiesView from './community/CommunityActivitiesView.vue';
 import CommunityActivityDetail from './community/CommunityActivityDetail.vue';
 import CommunityManageActivities from './community/CommunityManageActivities.vue';
+import CommunityFinanceView from './community/CommunityFinanceView.vue';
 import CommunityMessagesView from './community/CommunityMessagesView.vue';
 import DetailView from './prototype/DetailView.vue';
 import PersonalView from './prototype/PersonalView.vue';
@@ -39,7 +40,8 @@ export default createRouter({
     { path: '/messages', component: businessMode ? CommunityMessagesView : PersonalView },
     { path: '/manage', component: businessMode ? BusinessManageView : ManageView },
     { path: '/manage/activities', component: businessMode ? CommunityManageActivities : ManageView },
-    { path: '/manage/:section(recruitment|members|activities|finance)', component: businessMode ? BusinessManageView : ManageView },
+    { path: '/manage/finance', component: businessMode ? CommunityFinanceView : ManageView },
+    { path: '/manage/:section(recruitment|members|activities)', component: businessMode ? BusinessManageView : ManageView },
     { path: '/assistant', component: CommunityAssistantView },
     { path: '/guide', component: HelpView },
     { path: '/system', component: DashboardView },
