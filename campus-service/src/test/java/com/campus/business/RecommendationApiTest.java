@@ -65,18 +65,18 @@ class RecommendationApiTest {
             Map<?, ?> body = call.getArgument(0);
             assertThat(body.get("interest")).isEqualTo("喜欢记录校园生活");
             assertThat(body.toString()).doesNotContain(closed.getName(), "伪造兴趣", "password", "username");
-            assertThat(body.toString()).contains(photo.getDescription());
-            return mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(Map.of("clubId", closed.getId(), "score", 1), Map.of("clubId", photo.getId(), "score", 0.9), Map.of("clubId", 999999, "score", 0.8)))));
+            assertThat(body.toString()).contains(photo.getName(), photo.getCategory(), photo.getDescription(), photo.getTags());
+            return mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(item(closed.getId(), 1), item(photo.getId(), 0.9), item(999999L, 0.8)))));
         });
         mvc.perform(post("/api/ai/recommendations").session(session).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"userId\":999,\"interest\":\"伪造兴趣\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.method").value("SEMANTIC_COSINE"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.method").value("HYBRID_BM25_VECTOR_RRF"))
                 .andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.items[0].clubId").value(photo.getId()));
     }
     @Test void recruitmentClosureDuringEmbeddingIsRechecked() throws Exception {
         save("喜欢记录校园生活");
         when(ai.recommend(anyMap())).thenAnswer(call -> {
             photo.configureRecruitment(null, false, "", "", ""); clubs.save(photo);
-            return mapper.readTree("{\"items\":[{\"clubId\":" + photo.getId() + ",\"score\":0.9}]}");
+            return mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(item(photo.getId(), 0.9)))));
         });
         mvc.perform(post("/api/ai/recommendations").session(session).with(csrf())).andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(0));
     }
@@ -93,8 +93,33 @@ class RecommendationApiTest {
         when(ai.recommend(anyMap())).thenAnswer(call -> {
             photo.update(new ClubManagementController.ClubRequest(photo.getName(), "科技", "编程实践", "编程", "校区", true, "欢迎", "周三", "学生中心"));
             clubs.save(photo);
-            return mapper.readTree("{\"items\":[{\"clubId\":" + photo.getId() + ",\"score\":0.9}]}");
+            return mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(item(photo.getId(), 0.9)))));
         });
         mvc.perform(post("/api/ai/recommendations").session(session).with(csrf())).andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(0));
+    }
+    Map<String, Object> item(Long id, double score) { return Map.of("clubId", id, "score", score, "bm25Score", 1.5, "fusionScore", 0.03); }
+    @Test void excludesOnlyRecognizedVerificationFixturesAndRetainsTheirRecords() throws Exception {
+        save("喜欢编程和摄影");
+        var fixture = clubs.save(new Club("校园后端联调社（虚构）backend_abc123", "实践", "仅用于本地接口验收，不是真实学校社团。", "摄影,编程", "模拟校区"));
+        var normal = clubs.save(Club.create(new ClubManagementController.ClubRequest("学生创作社-" + UUID.randomUUID(), "实践", "编程与摄影交流", "编程,摄影", "校区", true, "欢迎", "周末", "学生中心")));
+        when(ai.recommend(anyMap())).thenAnswer(call -> {
+            Map<?, ?> body = call.getArgument(0);
+            assertThat(body.toString()).doesNotContain(fixture.getName()).contains(normal.getName());
+            return mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(item(fixture.getId(), 1), item(normal.getId(), 0.8)))));
+        });
+        mvc.perform(post("/api/ai/recommendations").session(session).with(csrf()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.items[0].clubId").value(normal.getId()))
+                .andExpect(jsonPath("$.items[0].bm25Score").value(1.5)).andExpect(jsonPath("$.items[0].fusionScore").value(0.03));
+        assertThat(clubs.findById(fixture.getId())).isPresent();
+        mvc.perform(get("/api/clubs/" + fixture.getId())).andExpect(status().isOk());
+    }
+    @Test void rejectsInvalidHybridScores() throws Exception {
+        save("喜欢摄影");
+        for (Map<String, Object> row : List.of(Map.<String, Object>of("clubId", photo.getId(), "score", 0.9),
+                Map.<String, Object>of("clubId", photo.getId(), "score", 0.9, "bm25Score", -1, "fusionScore", 0.03),
+                Map.<String, Object>of("clubId", photo.getId(), "score", 0.9, "bm25Score", 1, "fusionScore", 1))) {
+            when(ai.recommend(anyMap())).thenReturn(mapper.readTree(mapper.writeValueAsString(Map.of("items", List.of(row)))));
+            mvc.perform(post("/api/ai/recommendations").session(session).with(csrf())).andExpect(status().isBadGateway());
+        }
     }
 }

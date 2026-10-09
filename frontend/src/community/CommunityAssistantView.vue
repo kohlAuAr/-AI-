@@ -23,10 +23,10 @@ const interestDescription = computed(() => business.profile?.id === business.use
         <p v-if="recommendationState.loading" class="community-section-description" role="status">正在比较兴趣描述与社团介绍，请稍候。</p>
         <p v-if="recommendationState.error" class="p-form-error" role="alert">{{ recommendationState.error }}。可重新尝试，或先浏览社团。</p>
         <div v-if="recommendationState.requested" aria-live="polite">
-          <RouterLink v-for="club in recommendationState.items" :key="club.clubId" :to="`/clubs/${club.slug || club.clubId}`" class="community-semantic-row"><div><h3>{{ club.name }}</h3><p>匹配参考：{{ club.description }}</p><p>招新条件：{{ club.requirements || '请联系社团负责人' }}</p><p>{{ club.schedule || '时间待安排' }} · {{ club.place || '地点待安排' }}</p><small>语义相似度 {{ club.score.toFixed(3) }}，不是录取概率</small></div><CommunityIcon name="chevron" /></RouterLink>
+          <RouterLink v-for="club in recommendationState.items" :key="club.clubId" :to="`/clubs/${club.slug || club.clubId}`" class="community-semantic-row"><div><h3>{{ club.name }}</h3><p>匹配参考：{{ club.description }}</p><p>招新条件：{{ club.requirements || '请联系社团负责人' }}</p><p>{{ club.schedule || '时间待安排' }} · {{ club.place || '地点待安排' }}</p><small>语义相似度 {{ club.score.toFixed(3) }} · {{ club.bm25Score > 0 ? '文字线索命中' : '无直接文字命中' }}；按混合检索排序，不是录取概率</small></div><CommunityIcon name="chevron" /></RouterLink>
           <p v-if="!recommendationState.items.length" class="community-section-description">暂无可展示的匹配结果，可以补充兴趣描述，或浏览全部社团。</p>
         </div>
-        <p class="community-section-description">按兴趣原文与社团资料的语义相似度排序，仅展示招新中的社团。招新条件与时间仍需本人确认；未配置模型时不会展示模拟推荐。</p>
+        <p class="community-section-description">综合社团名称、类别、简介和标签，使用语义匹配与 BM25 文字检索融合排序，最多展示 3 个招新社团。招新条件与时间仍需本人确认；未配置模型时不会展示模拟推荐。</p>
       </template>
     </section>
     <section v-else class="community-assistant-section" aria-labelledby="assistant-interest-title">

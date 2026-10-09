@@ -37,7 +37,7 @@ globalThis.fetch = async (url, options = {}) => {
     writes++;
     if (path === '/api/ai/recommendations') {
       if (recommendationFailure) return Response.json({ detail: '语义推荐尚未配置 Embedding 模型' }, { status: 503 });
-      const result = { method: 'SEMANTIC_COSINE', items: [{ clubId: 10, slug: 'photo', name: '光影摄影社', description: '摄影入门与校园采风', requirements: '欢迎新手', schedule: '周三', place: '学生中心', score: 0.876 }] };
+      const result = { method: 'HYBRID_BM25_VECTOR_RRF', items: [{ clubId: 10, slug: 'photo', name: '光影摄影社', description: '摄影入门与校园采风', requirements: '欢迎新手', schedule: '周三', place: '学生中心', score: 0.876, bm25Score: 1.2, fusionScore: 0.032 }] };
       if (delayRecommendation) { const pause = delayRecommendation; delayRecommendation = null; await pause; }
       return Response.json(result);
     }
@@ -232,6 +232,7 @@ try {
   recommendationFailure = false;
   await recommendationClient.loadRecommendations();
   assert((await page('/assistant')).includes('摄影入门与校园采风') && (await page('/assistant')).includes('不是录取概率'));
+  assert((await page('/assistant')).includes('文字线索命中') && (await page('/assistant')).includes('混合检索排序') && (await page('/assistant')).includes('BM25'));
   await client.saveProfile({ ...updated, interestDescription: '想学习编程' });
   assert.equal(recommendationClient.recommendationState.items.length, 0, 'editing interests clears obsolete results');
   let releaseRecommendation;

@@ -2,7 +2,7 @@ import { computed, reactive, watch } from 'vue';
 import { request, errorMessage } from '../api';
 import { business, businessMode } from '../prototype/business';
 
-export interface Recommendation { clubId: number; slug: string | null; name: string; description: string; requirements: string; schedule: string; place: string; score: number }
+export interface Recommendation { clubId: number; slug: string | null; name: string; description: string; requirements: string; schedule: string; place: string; score: number; bm25Score: number; fusionScore: number }
 interface Result { method: string; items: Recommendation[] }
 export const recommendationState = reactive({ items: [] as Recommendation[], loading: false, error: '', requested: false });
 let generation = 0;

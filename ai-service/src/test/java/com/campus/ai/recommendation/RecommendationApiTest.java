@@ -70,7 +70,7 @@ class RecommendationApiTest {
     }
     @Test void semanticRankingWithoutChatOrKeywordOverlap() {
         var result = recommendations.recommend(request("想学习镜头构图", "摄影入门"));
-        assertThat(result.method()).isEqualTo("SEMANTIC_COSINE");
+        assertThat(result.method()).isEqualTo("HYBRID_BM25_VECTOR_RRF");
         assertThat(result.items()).hasSize(1);
         assertThat(result.items().get(0).clubId()).isEqualTo(10L);
         assertThat(result.items().get(0).score()).isEqualTo(1);

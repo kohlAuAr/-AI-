@@ -24,17 +24,42 @@ public class RecommendationService {
     public Result recommend(RecommendationController.Request body) {
         if (!settings.embeddingEnabled())
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "语义推荐尚未配置 Embedding 模型；个人资料保存和报名仍可使用");
-        if (body.clubs().isEmpty()) return new Result("SEMANTIC_COSINE", List.of());
+        if (body.clubs().isEmpty()) return new Result("HYBRID_BM25_VECTOR_RRF", List.of());
         List<String> texts = new ArrayList<>();
         texts.add(body.interest().trim());
         body.clubs().forEach(club -> texts.add(club.text().trim()));
         List<double[]> vectors = vectors(texts);
+        return new Result("HYBRID_BM25_VECTOR_RRF", hybridRank(body.interest(), body.clubs(), vectors));
+    }
+
+    static List<Item> hybridRank(String interest, List<RecommendationController.Candidate> clubs, List<double[]> vectors) {
+        double[] lexical = Bm25.scores(interest, clubs.stream().map(RecommendationController.Candidate::text).toList());
+        double[] semantic = new double[clubs.size()];
+        for (int i = 0; i < clubs.size(); i++) semantic[i] = cosine(vectors.get(0), vectors.get(i + 1));
+        double[] vectorRanks = reciprocalRanks(semantic);
+        double[] lexicalRanks = reciprocalRanks(lexical);
         List<Item> ranked = new ArrayList<>();
-        for (int i = 0; i < body.clubs().size(); i++) {
-            double score = cosine(vectors.get(0), vectors.get(i + 1));
-            if (score > 0) ranked.add(new Item(body.clubs().get(i).id(), score));
+        for (int i = 0; i < clubs.size(); i++) {
+            double fusion = vectorRanks[i] + lexicalRanks[i];
+            if (fusion > 0) ranked.add(new Item(clubs.get(i).id(), semantic[i], lexical[i], fusion));
         }
-        return new Result("SEMANTIC_COSINE", ranked.stream().sorted(Comparator.comparingDouble(Item::score).reversed().thenComparing(Item::clubId)).toList());
+        return ranked.stream().sorted(Comparator.comparingDouble(Item::fusionScore).reversed()
+                .thenComparing(Comparator.comparingDouble(Item::bm25Score).reversed())
+                .thenComparing(Comparator.comparingDouble(Item::score).reversed()).thenComparing(Item::clubId)).toList();
+    }
+
+    // Zero/negative results are absent from that ranking; ties share a competition rank.
+    private static double[] reciprocalRanks(double[] scores) {
+        List<Integer> order = java.util.stream.IntStream.range(0, scores.length).boxed().filter(i -> scores[i] > 0)
+                .sorted(Comparator.<Integer>comparingDouble(i -> scores[i]).reversed()).toList();
+        double[] result = new double[scores.length];
+        int rank = 0;
+        for (int position = 0; position < order.size(); position++) {
+            int index = order.get(position);
+            if (position == 0 || Double.compare(scores[index], scores[order.get(position - 1)]) != 0) rank = position + 1;
+            result[index] = 1.0 / (60 + rank);
+        }
+        return result;
     }
 
     // Small-campus cache writes are serialized; repository calls commit separately, never keep a DB transaction open over model HTTP.
@@ -78,6 +103,6 @@ public class RecommendationService {
         if (!Double.isFinite(score)) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "推荐相似度计算失败");
         return Math.max(-1, Math.min(1, score));
     }
-    public record Item(Long clubId, double score) {}
+    public record Item(Long clubId, double score, double bm25Score, double fusionScore) {}
     public record Result(String method, List<Item> items) {}
 }
