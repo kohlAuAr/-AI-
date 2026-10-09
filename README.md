@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File C:\workspace\campus-club-platform\scrip
 
 ## 先运行起来
 
-需要 Java 17、Maven、Node.js。后端沿用已有项目的 Spring Boot 3.4.2；前端采用 Vue 3.5.13 和 Vite 6.3.5。AI 服务使用 Spring AI 1.0.9 接入原生 Ollama 或 OpenAI-compatible Embedding；仅引入模型库、不启用模型自动下载。聊天客户端暂保留原实现，未迁移到 Spring AI。
+需要 Java 17、Maven、Node.js。后端沿用已有项目的 Spring Boot 3.4.2；前端采用 Vue 3.5.13 和 Vite 6.3.5。AI 服务使用 Spring AI 1.0.9 接入原生 Ollama 或 OpenAI-compatible 聊天与 Embedding；仅引入模型库、不启用模型自动下载。
 
 在 PowerShell 中执行。如果本项目已经运行，先执行 `scripts/stop-dev.ps1` 停止本项目，再重新打包：
 
@@ -93,7 +93,7 @@ campus-club-platform/
 
 两个后端分别拥有应用入口、进程、数据库与 HTTP 接口。当前没有注册中心、独立网关或跨服务公共 DTO 库。校园服务提供 AI 转发入口，前端不直接访问 AI 服务。
 
-## 两种问答模式
+## 问答模式
 
 默认 `AI_MODE=local`：无需数据库安装和模型密钥。H2 文件库分别位于各后端工作目录的 `data/`；上传文本后进行关键词检索，返回原文摘录与出处。**LOCAL 问答不调用 LLM、不做语义检索；兴趣推荐可独立启用 Embedding。** 不配置 Embedding 时，推荐明确提示不可用。
 
@@ -114,11 +114,19 @@ EMBEDDING_MODEL=qwen3-embedding:0.6b
 EMBEDDING_API_KEY=
 ```
 
-原生 Ollama 地址不带 `/v1`，调用 `/api/embed`，本机默认不需要 API Key。不要把模型地址或密钥交给学生填写。该配置只启用真实语义推荐；`qwen2.5:3b` 等聊天模型本轮不接入，LOCAL 资料问答仍返回原文摘录。
+原生 Ollama 地址不带 `/v1`，调用 `/api/embed`，本机默认不需要 API Key。不要把模型地址或密钥交给学生填写。上述 `AI_MODE=local` 配置只启用真实语义推荐，资料问答仍返回原文摘录。
 
 脚本启动后，登录 → “我的”编辑兴趣描述 → “助手”按兴趣推荐。已运行时修改配置后执行 `powershell -ExecutionPolicy Bypass -File .\scripts\restart-ai.ps1 -BackupData`，只重启 AI 服务，不动校园服务、前端或 Ollama。首次加载可能较慢；模型读取超时为 60 秒，失败会明确提示，不显示伪造推荐。
 
 实际模型验收：`node scripts/check-ollama-recommendation.mjs`；重启 AI 后 `node scripts/check-ollama-recommendation.mjs restored`。两者使用独立虚构账号，不改现有学生资料。未配置模型的旧验收脚本 `check-interest-recommendation.mjs` 不用于此配置。详情与测得的分数见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。
+
+## 本机 Ollama 资料问答
+
+在上面的原生 Embedding 配置基础上，将 `AI_MODE` 改为 `ollama`，增加 `CHAT_BASE_URL=http://127.0.0.1:11434`、`CHAT_MODEL=qwen2.5:3b`、`CHAT_API_KEY=`。必须先安装模型并由用户打开 Ollama，项目不会代为下载模型。
+
+重新启动 AI 后，在 `/system/knowledge` 重新上传公开测试资料建立当前模型索引，在 `/system/chat` 提问；也可以从 `/assistant` 的“打开资料问答”进入。流程为上传→分块→向量存储→关键词与向量检索→Spring AI 调用聊天模型→保存回答与原文出处。旧资料与历史引用保留，不自动批量重建索引。模型回答不是审核结论，不能替代实时业务查询。
+
+使用 `node scripts/check-ollama-rag.mjs` 验收，`restored` 检查重启后的资料、回答和引用，`offline` 检查只停止项目 AI 后校园业务仍可查询。原 `scripts/smoke.mjs` 继续限定 LOCAL 模式，防止误调用外部收费模型。具体实现、使用方法和验收边界见 [RAG 问答说明](docs/RAG-WORKFLOW.md)。
 
 ## 当前边界
 

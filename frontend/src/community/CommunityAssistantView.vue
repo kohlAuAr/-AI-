@@ -37,7 +37,7 @@ const interestDescription = computed(() => business.profile?.id === business.use
     </section>
     <section class="community-assistant-section" aria-labelledby="assistant-knowledge-title">
       <div class="community-section-heading"><h2 id="assistant-knowledge-title">社团资料问答</h2></div>
-      <p class="community-section-description">{{ publicPreview ? '纯前端预览暂不开放问答。先查看社团介绍与招新条件。' : '从已上传资料中检索答案，并查看原文出处。默认本地模式返回资料摘录。' }}</p>
+      <p class="community-section-description">{{ publicPreview ? '纯前端预览暂不开放问答。先查看社团介绍与招新条件。' : '从已上传资料中检索依据，启用模型后整理回答。可以展开原文核对，具体模式见问答页面。' }}</p>
       <template v-if="!publicPreview"><RouterLink to="/system/chat" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="assistant" /></span><div><strong>打开资料问答</strong><p>进入现有问答页面</p></div><CommunityIcon name="chevron" /></RouterLink><RouterLink to="/system/knowledge" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="read" /></span><div><strong>公开测试资料</strong><p>上传、查看和管理资料</p></div><CommunityIcon name="chevron" /></RouterLink></template>
       <RouterLink v-else to="/clubs?recruiting=true" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="join" /></span><div><strong>查看招新条件</strong><p>先了解，再申请</p></div><CommunityIcon name="chevron" /></RouterLink>
     </section>

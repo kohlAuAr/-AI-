@@ -5,7 +5,7 @@ export interface ModuleStatus {
   description: string;
 }
 export interface SystemInfo { name: string; security: string; modules: ModuleStatus[] }
-export interface AiStatus { mode: 'LOCAL' | 'OPENAI'; knowledgeDocuments: number; retrieval: string; sessionStore: string; scope: string; agent: string }
+export interface AiStatus { mode: 'LOCAL' | 'OPENAI' | 'OLLAMA'; knowledgeDocuments: number; retrieval: string; sessionStore: string; scope: string; agent: string }
 export interface Club { id: number; name: string; category: string; description: string; tags: string; campus: string; demo: boolean }
 export interface Activity { id: number; clubId: number; title: string; location: string; startTime: string; capacity: number; status: string; demo: boolean }
 export interface KnowledgeDocument { id: number; name: string; chunkCount: number; embeddingVersion: string; createdAt: string; scope: string }

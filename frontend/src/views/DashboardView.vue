@@ -26,7 +26,7 @@ onMounted(load);
   <div class="stats-grid">
     <section class="stat-card"><span>校园业务服务</span><strong>{{ system ? '已联通' : '未联通' }}</strong><p>8090 · 社团、活动与 AI 请求入口</p></section>
     <section class="stat-card"><span>智能辅助服务</span><strong>{{ ai ? '已联通' : '未联通' }}</strong><p>8091 · 资料、检索与会话记录</p></section>
-    <section class="stat-card"><span>问答运行模式</span><strong>{{ ai ? (ai.mode === 'LOCAL' ? '本地检索' : '真实模型') : '待检查' }}</strong><p>{{ ai?.mode === 'OPENAI' ? '使用配置的模型接口' : '无需 API 密钥，返回原文摘录' }}</p></section>
+    <section class="stat-card"><span>问答运行模式</span><strong>{{ ai ? (ai.mode === 'LOCAL' ? '本地检索' : ai.mode === 'OLLAMA' ? '本机 Ollama' : '接口模型') : '待检查' }}</strong><p>{{ !ai ? '尚未取得服务配置状态' : ai.mode === 'LOCAL' ? '不调用大模型，返回原文摘录' : '检索资料并调用模型；联通不代表模型健康检查通过' }}</p></section>
   </div>
   <p v-if="campusError" class="error" role="alert">校园服务：{{ campusError }}</p>
   <p v-if="aiError" class="error" role="alert">智能服务：{{ aiError }}</p>

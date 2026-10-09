@@ -9,8 +9,8 @@
 | 3 | 活动草稿/发布/报名已接页面；编辑/取消/签到后端已实现，补页面 | `activity`、`registration` | `community/Community*Activit*.vue` | 有人报名不改时地、取消通知、码权限、签到防重与数据保留 |
 | 4 | 站内通知已实现；实时推送未做 | `notification` | `community/CommunityMessagesView.vue` | 业务与通知同事务、本人分页与已读、结果跳转及重启保留，见通知验证记录 |
 | 5 | 经费和账号收藏 API 已实现，补页面对接 | `finance`、`favorite` | 管理端经费页、收藏页 | 金额精度、同笔防重、作废留痕、跨账号隔离及重启保留 |
-| 6 | 自由文本语义推荐接口与页面已实现；下一步真实模型联调与效果评估 | `identity/ProfileService`、`ai/RecommendationController`；AI `recommendation` | `/me` 兴趣描述 → `/assistant` 获取推荐 | 当前仅校验招新开关；文字资格/时间仍由本人确认，后续用固定测试集对比推荐质量 |
-| 7 | 资料权限与正式持久化 | 扩展 AI 文档范围；完善 MySQL 迁移 | 知识库权限界面 | 跨社团资料不能被检索，重启保留问答及出处 |
+| 6 | 自由文本推荐已用本机模型联调，并加入 BM25/RRF；下一步固定样本效果评估 | `identity/ProfileService`、`ai/RecommendationController`；AI `recommendation` | `/me` 兴趣描述 → `/assistant` 获取推荐 | 当前仅校验招新开关；文字资格/时间仍由本人确认，见兴趣推荐说明 |
+| 7 | 公开资料 RAG 已接 Spring AI 聊天与 Embedding；资料权限与正式迁移待完成 | AI `knowledge`、`chat`；未来扩展文档范围及 MySQL 迁移 | `/system/knowledge` → `/system/chat` | 生成回答、原文引用、失败不留半成品、重启保留；当前不能上传私人资料，见 RAG-WORKFLOW.md |
 | 8 | 策划助手与人工确认 | AI 服务新增 `planning`；校园服务保存正式活动 | 草稿编辑与确认页 | 未确认不发布，事实来自业务查询 |
 | 9 | ReAct / MCP / DAG | 按实际工具需求逐项新增 | 工具状态与结果展示 | 每项有独立用例与运行记录 |
 

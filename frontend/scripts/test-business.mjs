@@ -91,6 +91,10 @@ try {
   const router = (await server.ssrLoadModule('/src/router.ts')).default;
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
   async function page(path) { await router.push(path); await router.isReady(); return renderToString(createSSRApp(App).use(router)); }
+  const chatPage = await page('/system/chat');
+  assert(chatPage.includes('正在确认问答模式'), 'unloaded status must not imply LOCAL mode');
+  assert(chatPage.includes('模型回答可能有误'), 'RAG page discloses generated answer uncertainty');
+  assert(chatPage.includes('当前只读问答'), 'RAG page cannot imply automatic business actions');
   const directory = await page('/clubs');
   assert(directory.includes('community-search'));
   assert(directory.includes('只看招新中'), 'club directory exposes recruitment filtering');

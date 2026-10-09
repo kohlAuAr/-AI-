@@ -62,7 +62,7 @@
 {"question":"程序设计社适合零基础吗？","conversationId":null}
 ```
 
-首次响应包含服务生成的 UUID `conversationId`，后续请求可传这个 ID。`mode=LOCAL` 表示原文摘录；`mode=OPENAI` 表示启用了模型接口（无依据时仍直接返回资料不足）。`references` 包含资料 ID、名称、片段号、摘录和检索得分，`retrieval` 表示本次实际采用的检索方式。
+首次响应包含服务生成的 UUID `conversationId`，后续请求可传这个 ID。`mode=LOCAL` 表示原文摘录；`mode=OPENAI` 表示兼容模型接口；`mode=OLLAMA` 表示原生 Ollama 模型接口。模式是配置，不是健康检查；无检索依据时不调用聊天模型，直接提示资料不足。`references` 包含资料 ID、名称、片段号、摘录和检索得分，`retrieval` 表示本次实际采用的检索方式。引用是检索原文，不代表每个生成结论均已核验。公开测试范围和验收见 [RAG 问答说明](RAG-WORKFLOW.md)。
 
 写请求需先 GET `/api/auth/session`，将 csrfToken 放入 csrfHeader 指定的请求头，同时保留 Session Cookie。登录、退出会轮换 CSRF 状态，下一次写请求重新取 token。前端 `request()` 已封装这一过程。
 

@@ -42,11 +42,11 @@ BM25 与余弦分数的量纲不同，不直接相加。公式与参数参考 [B
 
 ## 配置真实模型
 
-聊天与推荐配置分开：`AI_MODE` 决定问答模式；`EMBEDDING_PROVIDER` 决定向量接入方式，`auto` 保留旧行为（LOCAL 关闭向量、OPENAI 使用兼容接口），`none` 显式关闭，`ollama` 使用本机原生接口，`openai` 使用兼容接口。还需要非空 `EMBEDDING_MODEL`。只运行推荐不需要配置 CHAT_MODEL，也不调用聊天生成接口。
+聊天与推荐配置分开：`AI_MODE` 决定问答模式；`EMBEDDING_PROVIDER` 决定向量接入方式，`auto` 跟随模式（LOCAL 关闭向量、OPENAI 使用兼容接口、OLLAMA 使用原生接口），`none` 显式关闭，`ollama` 使用本机原生接口，`openai` 使用兼容接口。还需要非空 `EMBEDDING_MODEL`。只运行推荐不需要配置 CHAT_MODEL，也不调用聊天生成接口。
 
 本机配置：`AI_MODE=local`、`EMBEDDING_PROVIDER=ollama`、`EMBEDDING_BASE_URL=http://127.0.0.1:11434`、`EMBEDDING_MODEL=qwen3-embedding:0.6b`、`EMBEDDING_API_KEY=`。先手动打开已有 Ollama。原生接口不带 `/v1`，请求 `/api/embed`，不自动拉取模型。若改用兼容接口，设置 `EMBEDDING_PROVIDER=openai`，Base URL 使用服务提供的兼容根路径（通常带 `/v1`），请求 `/embeddings`。
 
-LOCAL + Ollama 只为兴趣推荐编码，知识上传仍保存关键词分块、版本为 `local-keyword`，问答行为不变。需要真实 RAG 时，再配置聊天模型并启用 OPENAI 问答模式、重新上传资料。模型必须支持当前原文编码方式和中文语义匹配；需要 query/document 专用前缀的模型，应先明确其编码要求再适配。本轮使用同一模型直接编码两种文本，尚未做模型专用任务前缀实验。
+LOCAL + Ollama 只为兴趣推荐编码，知识上传仍保存关键词分块、版本为 `local-keyword`，问答行为不变。需要真实 RAG 时，配置聊天模型并启用 OLLAMA 或 OPENAI 问答模式，重新上传资料；见 [RAG 问答说明](RAG-WORKFLOW.md)。模型必须支持当前原文编码方式和中文语义匹配；需要 query/document 专用前缀的模型，应先明确其编码要求再适配。本轮使用同一模型直接编码两种文本，尚未做模型专用任务前缀实验。
 
 `/api/ai/status` 的 recommendation 状态只表示配置，不代表健康检查。Spring AI 迁移使用新的缓存命名空间（适配器版本 + 接入方式 + 地址 + 模型），不复用旧手写客户端的向量。模型权重如果原地替换却保留同一地址和名称，需更换版本化模型名称或在停机备份后清理对应缓存；当前不做权重自动探测。
 

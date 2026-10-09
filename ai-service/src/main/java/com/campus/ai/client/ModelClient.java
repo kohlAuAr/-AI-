@@ -1,19 +1,25 @@
 package com.campus.ai.client;
 
 import com.campus.ai.config.AiSettings;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.*;
+import org.springframework.ai.chat.messages.*;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.embedding.*;
 import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.model.NoopApiKey;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -26,7 +32,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Spring AI Embedding adapter; chat and bounded batching adapted from PaiSmart. See THIRD-PARTY-NOTICES.md. */
+/** Spring AI model adapter; bounded batching adapted from PaiSmart. See THIRD-PARTY-NOTICES.md. */
 @Component
 public class ModelClient {
     private final AiSettings settings;
@@ -63,16 +69,45 @@ public class ModelClient {
     }
 
     public String chat(List<Map<String, String>> messages) {
-        JsonNode response = client(settings.chat()).post().uri("/chat/completions")
-                .body(Map.of("model", settings.chat().model(), "messages", messages, "temperature", 0.2, "max_tokens", 1800))
-                .retrieve().body(JsonNode.class);
-        String answer = response == null ? "" : response.path("choices").path(0).path("message").path("content").asText("");
+        if (!settings.modelEnabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "当前是本地摘录模式，未启用聊天模型");
+        List<Message> prompt = messages.stream().map(message -> switch (message.get("role")) {
+            case "system" -> (Message) new SystemMessage(message.get("content"));
+            case "user" -> new UserMessage(message.get("content"));
+            case "assistant" -> new AssistantMessage(message.get("content"));
+            default -> throw new IllegalArgumentException("不支持的消息角色");
+        }).toList();
+        ChatResponse response;
+        try {
+            response = chatModel().call(new Prompt(prompt));
+        } catch (ResourceAccessException | RestClientResponseException e) {
+            throw e;
+        } catch (RestClientException | IllegalArgumentException | NullPointerException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "聊天模型返回的响应格式不正确");
+        }
+        String answer = response == null || response.getResult() == null || response.getResult().getOutput() == null
+                ? "" : Objects.toString(response.getResult().getOutput().getText(), "");
         if (answer.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "模型没有返回有效回答");
         return answer;
     }
 
-    private RestClient client(AiSettings.Provider provider) {
-        return clientBuilder(provider).build();
+    private ChatModel chatModel() {
+        AiSettings.Provider provider = settings.chat();
+        var http = clientBuilder(provider);
+        var retry = RetryTemplate.builder().maxAttempts(1).build();
+        if (settings.mode() == AiSettings.Mode.OLLAMA) {
+            var api = OllamaApi.builder().baseUrl(provider.baseUrl().replaceAll("/+$", "")).restClientBuilder(http)
+                    .responseErrorHandler(new DefaultResponseErrorHandler()).build();
+            // No pull or tools: only installed models, one bounded synchronous response.
+            return OllamaChatModel.builder().ollamaApi(api).retryTemplate(retry)
+                    .defaultOptions(OllamaOptions.builder().model(provider.model()).temperature(0.2)
+                            .numCtx(8192).numPredict(600).internalToolExecutionEnabled(false).build()).build();
+        }
+        var key = provider.apiKey() == null || provider.apiKey().isBlank() ? new NoopApiKey() : new SimpleApiKey(provider.apiKey());
+        var api = OpenAiApi.builder().baseUrl(provider.baseUrl().replaceAll("/+$", "")).apiKey(key).completionsPath("/chat/completions")
+                .restClientBuilder(http).responseErrorHandler(new DefaultResponseErrorHandler()).build();
+        return OpenAiChatModel.builder().openAiApi(api).retryTemplate(retry)
+                .defaultOptions(OpenAiChatOptions.builder().model(provider.model()).temperature(0.2).maxTokens(1800)
+                        .internalToolExecutionEnabled(false).build()).build();
     }
 
     private EmbeddingModel embeddingModel() {
@@ -95,7 +130,7 @@ public class ModelClient {
 
     private RestClient.Builder clientBuilder(AiSettings.Provider provider) {
         if (provider.model() == null || provider.model().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "请先配置模型名称与模型接口，再启用 openai 模式");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "请先配置模型名称与模型接口");
         }
         String baseUrl = provider.baseUrl().replaceAll("/+$", "");
         var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());

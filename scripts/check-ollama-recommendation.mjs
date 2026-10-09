@@ -17,7 +17,7 @@ const cases = [
 ];
 if (mode !== 'offline') {
   const status = await client.json('/api/ai/status');
-  assert.equal(status.mode, 'LOCAL', 'Keep chat in local keyword mode for this check.');
+  assert(['LOCAL', 'OLLAMA'].includes(status.mode), 'Only local excerpts or native Ollama modes are accepted; this check never calls chat.');
   assert.equal(status.embeddingProvider, 'OLLAMA');
   assert.equal(status.recommendation, 'SEMANTIC_CONFIGURED_NOT_HEALTH_CHECKED');
 } else {

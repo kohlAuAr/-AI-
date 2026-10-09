@@ -111,6 +111,9 @@ class ModelClientTest {
         assertThat(new AiSettings(AiSettings.Mode.LOCAL, false, provider, provider, AiSettings.EmbeddingProvider.AUTO).embeddingEnabled()).isFalse();
         assertThat(new AiSettings(AiSettings.Mode.OPENAI, false, provider, provider, AiSettings.EmbeddingProvider.AUTO).effectiveEmbeddingProvider()).isEqualTo(AiSettings.EmbeddingProvider.OPENAI);
         assertThat(new AiSettings(AiSettings.Mode.OPENAI, false, provider, provider, AiSettings.EmbeddingProvider.NONE).embeddingEnabled()).isFalse();
+        var ragSettings = new AiSettings(AiSettings.Mode.OLLAMA, false, provider, provider, AiSettings.EmbeddingProvider.AUTO);
+        assertThat(ragSettings.modelEnabled()).isTrue();
+        assertThat(ragSettings.effectiveEmbeddingProvider()).isEqualTo(AiSettings.EmbeddingProvider.OLLAMA);
         var nativeSettings = new AiSettings(AiSettings.Mode.LOCAL, false, provider, provider, AiSettings.EmbeddingProvider.OLLAMA);
         assertThat(nativeSettings.embeddingEnabled()).isTrue();
         assertThat(nativeSettings.modelEnabled()).isFalse();
