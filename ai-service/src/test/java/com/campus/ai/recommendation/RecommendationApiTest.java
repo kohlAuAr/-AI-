@@ -117,7 +117,7 @@ class RecommendationApiTest {
         assertThat(calls).isZero();
     }
     @Test void localModeNeverPretendsToGenerateVectors() {
-        var local = new AiSettings(AiSettings.Mode.LOCAL, false, settings.chat(), settings.embedding());
+        var local = new AiSettings(AiSettings.Mode.LOCAL, false, settings.chat(), settings.embedding(), AiSettings.EmbeddingProvider.AUTO);
         var service = new RecommendationService(models, local, cache, JSON);
         assertThatThrownBy(() -> service.recommend(request("镜头构图", "摄影入门"))).hasMessageContaining("尚未配置");
         assertThat(calls).isZero();

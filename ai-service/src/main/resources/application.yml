@@ -36,6 +36,7 @@ management:
 ai:
   mode: ${AI_MODE:local}
   redis-enabled: ${AI_REDIS_ENABLED:false}
+  embedding-provider: ${EMBEDDING_PROVIDER:auto}
   chat:
     base-url: ${CHAT_BASE_URL:http://127.0.0.1:11434/v1}
     model: ${CHAT_MODEL:}

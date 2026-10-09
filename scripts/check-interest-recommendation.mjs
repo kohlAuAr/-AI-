@@ -11,9 +11,15 @@ const client = createSessionClient(base);
 const headers = { 'Content-Type': 'application/json' };
 const send = (path, body) => client.request(path, { method: 'POST', headers, ...(body ? { body: JSON.stringify(body) } : {}) });
 assert.equal((await send('/api/ai/recommendations')).status, 401);
+if (mode === 'offline') {
+  assert.equal((await client.request('/api/ai/status')).status, 503, 'Stop only the project AI service before offline checks.');
+} else {
+  const status = await client.json('/api/ai/status');
+  assert.equal(status.mode, 'LOCAL', 'This check must not call an external model.');
+  assert.equal(status.recommendation, 'EMBEDDING_NOT_CONFIGURED', 'Use check-ollama-recommendation.mjs when Embedding is configured.');
+}
 let fixture;
 if (mode === 'flow') {
-  assert.equal((await client.json('/api/ai/status')).mode, 'LOCAL', 'This check must not call an external model.');
   fixture = { username: `interest_${Date.now().toString(36)}`, password: 'CampusDemo123!', name: '兴趣描述验收学生', major: '数字媒体', interestDescription: '喜欢用手机记录校园生活，想学拍照和剪视频，零基础', interests: ['摄影'], availableTime: '周三晚上' };
   await client.json('/api/auth/register', { method: 'POST', headers, body: JSON.stringify(fixture) });
 } else fixture = JSON.parse(await readFile(fixturePath, 'utf8'));

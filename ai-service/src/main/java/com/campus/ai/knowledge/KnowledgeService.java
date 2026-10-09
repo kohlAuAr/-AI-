@@ -58,11 +58,12 @@ public class KnowledgeService {
         if (content.indexOf('\0') >= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料包含非文本内容");
         List<String> texts = chunker.split(content);
         if (texts.isEmpty() || texts.size() > 128) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料必须有正文且分块数量不能超过 128");
-        String version = models.embeddingVersion();
+        boolean vectorIndex = settings.modelEnabled() && settings.embeddingEnabled();
+        String version = vectorIndex ? models.embeddingVersion() : "local-keyword";
         String fingerprint = fingerprint(content + "\0" + version);
         Optional<KnowledgeDocument> existing = documents.findByFingerprint(fingerprint);
         if (existing.isPresent()) return view(existing.get());
-        List<double[]> vectors = settings.modelEnabled() ? models.embed(texts) : List.of();
+        List<double[]> vectors = vectorIndex ? models.embed(texts) : List.of();
         KnowledgeDocument doc = documents.save(new KnowledgeDocument(name, fingerprint, content, version, texts.size()));
         List<KnowledgeChunk> savedChunks = new ArrayList<>();
         for (int i = 0; i < texts.size(); i++) {

@@ -19,7 +19,7 @@ foreach ($port in @(8090, 8091, 5178)) {
 }
 # Only parse known KEY=VALUE settings; the file is never executed as shell code.
 $localEnvironment = Join-Path $projectRoot '.env.local'
-$allowedKeys = @('AI_MODE', 'AI_REDIS_ENABLED', 'CHAT_BASE_URL', 'CHAT_MODEL', 'CHAT_API_KEY', 'EMBEDDING_BASE_URL', 'EMBEDDING_MODEL', 'EMBEDDING_API_KEY', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'SPRING_PROFILES_ACTIVE')
+$allowedKeys = @('AI_MODE', 'AI_REDIS_ENABLED', 'CHAT_BASE_URL', 'CHAT_MODEL', 'CHAT_API_KEY', 'EMBEDDING_PROVIDER', 'EMBEDDING_BASE_URL', 'EMBEDDING_MODEL', 'EMBEDDING_API_KEY', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'SPRING_PROFILES_ACTIVE')
 if (Test-Path -LiteralPath $localEnvironment) {
     foreach ($line in Get-Content -LiteralPath $localEnvironment -Encoding UTF8) {
         if ($line -match '^\s*(#|$)') { continue }

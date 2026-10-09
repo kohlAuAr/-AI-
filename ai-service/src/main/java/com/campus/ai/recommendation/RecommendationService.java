@@ -22,7 +22,7 @@ public class RecommendationService {
     }
 
     public Result recommend(RecommendationController.Request body) {
-        if (!settings.modelEnabled() || settings.embedding().model().isBlank())
+        if (!settings.embeddingEnabled())
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "语义推荐尚未配置 Embedding 模型；个人资料保存和报名仍可使用");
         if (body.clubs().isEmpty()) return new Result("SEMANTIC_COSINE", List.of());
         List<String> texts = new ArrayList<>();

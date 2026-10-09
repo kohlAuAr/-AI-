@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 
 // Test client only. Emulates the browser's cookie jar and fetches CSRF tokens before writes.
-export function createSessionClient(base) {
+export function createSessionClient(base, timeoutMs = 10000) {
   const cookies = new Map();
   async function send(path, options = {}) {
     const headers = new Headers(options.headers);
     if (cookies.size) headers.set('Cookie', [...cookies].map(([name, value]) => `${name}=${value}`).join('; '));
-    const response = await fetch(base + path, { ...options, headers, redirect: 'manual', signal: AbortSignal.timeout(10000) });
+    const response = await fetch(base + path, { ...options, headers, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
     for (const value of response.headers.getSetCookie()) {
       const [name, ...parts] = value.split(';')[0].split('=');
       cookies.set(name, parts.join('='));

@@ -6,7 +6,7 @@ Git 历史于 2026-10-08 根据先前开发记录分阶段重建，不是当时�
 
 已实现：两个独立 Spring Boot 服务；Vue3 前端；学生注册、个人资料与兴趣接口；数据库社团查询及负责人创建/维护、招新开关与条件维护；Session 登录与所属社团权限；入社申请、审核、撤回和成员关系；活动草稿、编辑、确认发布、取消及报名者通知；报名/取消、名额与截止校验、负责人报名与签到名单；签到码开启/关闭与学生签到；活动预算、支出防重、作废留痕、社团汇总；账号收藏；站内结果通知、账号隔离、分页与已读状态；公开 UTF-8 文本上传、分块、检索、出处展示和会话记录；可配置的真实模型与 Embedding 接口；可选 Redis 短期上下文。
 
-待实现：新增校园后端接口的页面接入、找回密码、正式学校身份认证、完整 AI 资料权限、AI 活动策划与人工确认、ReAct、MCP、DAG。兴趣语义推荐的接口与页面已实现，真实 Embedding 模型联调和推荐效果评估待完成。当前页面明确区分数据库功能与演示功能。
+待实现：新增校园后端接口的页面接入、找回密码、正式学校身份认证、完整 AI 资料权限、AI 活动策划与人工确认、ReAct、MCP、DAG。兴趣语义推荐已用 Spring AI 接通本机 Ollama，三个中文兴趣样例通过真实 HTTP；正式推荐效果评估仍待完成。当前页面明确区分数据库功能与演示功能。
 
 注册与个人资料链已接入前端：`/login` 注册学生账号后登录，在 `/me` 编辑姓名、专业、兴趣描述、辅助标签和空闲时间，保存到当前账号数据库。`/assistant` 使用兴趣描述和社团资料做 Embedding 相似度排序，需配置模型；未配置时明确提示不可用，不显示模拟推荐。资料保存不调用 AI。见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。社团维护、活动编辑/取消/签到、经费和账号收藏已可通过 API 使用，但对应页面尚未全部接入；当前收藏页面仍是浏览器本地数据。范围、请求示例与源码路线见 [校园后端业务说明](docs/CAMPUS-BACKEND-WORKFLOW.md)，账号链使用与验收见 [账号与个人资料](docs/ACCOUNT-PROFILE-WORKFLOW.md)。
 
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File C:\workspace\campus-club-platform\scrip
 
 ## 先运行起来
 
-需要 Java 17、Maven、Node.js。后端沿用已有项目的 Spring Boot 3.4.2；前端采用 Vue 3.5.13 和 Vite 6.3.5。当前没有 Spring AI 依赖，通过独立模型客户端接入兼容接口。
+需要 Java 17、Maven、Node.js。后端沿用已有项目的 Spring Boot 3.4.2；前端采用 Vue 3.5.13 和 Vite 6.3.5。AI 服务使用 Spring AI 1.0.9 接入原生 Ollama 或 OpenAI-compatible Embedding；仅引入模型库、不启用模型自动下载。聊天客户端暂保留原实现，未迁移到 Spring AI。
 
 在 PowerShell 中执行。如果本项目已经运行，先执行 `scripts/stop-dev.ps1` 停止本项目，再重新打包：
 
@@ -95,11 +95,30 @@ campus-club-platform/
 
 ## 两种问答模式
 
-默认 `AI_MODE=local`：无需数据库安装和模型密钥。H2 文件库分别位于各后端工作目录的 `data/`；上传文本后进行关键词检索，返回原文摘录与出处。**本地模式没有 Embedding，也不生成 AI 回答。**
+默认 `AI_MODE=local`：无需数据库安装和模型密钥。H2 文件库分别位于各后端工作目录的 `data/`；上传文本后进行关键词检索，返回原文摘录与出处。**LOCAL 问答不调用 LLM、不做语义检索；兴趣推荐可独立启用 Embedding。** 不配置 Embedding 时，推荐明确提示不可用。
 
 真实模型模式：复制 `.env.example` 为 `.env.local`，设置 `AI_MODE=openai`，填写 `CHAT_BASE_URL`、`CHAT_MODEL`、`CHAT_API_KEY`、`EMBEDDING_BASE_URL`、`EMBEDDING_MODEL`、`EMBEDDING_API_KEY`。文件使用 `KEY=VALUE`，值不加引号，也不执行变量替换。Base URL 填兼容接口的根路径，例如服务提供的 `/v1` 根地址；不要填完整 `/chat/completions` 或 `/embeddings` 路径。更改后重新启动本项目。
 
 真实模式下重新上传资料，才会生成与当前模型对应的向量。更换 Embedding 模型或维度应重新建立索引；本地模式旧资料仍可被关键词检索。启动服务不会自动调用付费模型。模型故障返回明确错误，不偷偷用本地摘录冒充模型回答。
+
+## 本机 Ollama 兴趣推荐
+
+先打开 Ollama，确认已经安装 `qwen3-embedding:0.6b`。根目录忽略的 `.env.local` 设置：
+
+```dotenv
+AI_MODE=local
+AI_REDIS_ENABLED=false
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_BASE_URL=http://127.0.0.1:11434
+EMBEDDING_MODEL=qwen3-embedding:0.6b
+EMBEDDING_API_KEY=
+```
+
+原生 Ollama 地址不带 `/v1`，调用 `/api/embed`，本机默认不需要 API Key。不要把模型地址或密钥交给学生填写。该配置只启用真实语义推荐；`qwen2.5:3b` 等聊天模型本轮不接入，LOCAL 资料问答仍返回原文摘录。
+
+脚本启动后，登录 → “我的”编辑兴趣描述 → “助手”按兴趣推荐。已运行时修改配置后执行 `powershell -ExecutionPolicy Bypass -File .\scripts\restart-ai.ps1 -BackupData`，只重启 AI 服务，不动校园服务、前端或 Ollama。首次加载可能较慢；模型读取超时为 60 秒，失败会明确提示，不显示伪造推荐。
+
+实际模型验收：`node scripts/check-ollama-recommendation.mjs`；重启 AI 后 `node scripts/check-ollama-recommendation.mjs restored`。两者使用独立虚构账号，不改现有学生资料。未配置模型的旧验收脚本 `check-interest-recommendation.mjs` 不用于此配置。详情与测得的分数见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。
 
 ## 当前边界
 

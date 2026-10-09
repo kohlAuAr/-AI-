@@ -5,13 +5,28 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.*;
+import org.springframework.ai.embedding.*;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.model.NoopApiKey;
+import org.springframework.ai.model.SimpleApiKey;
+import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Adapted from PaiSmart EmbeddingClient / DeepSeekClient. See THIRD-PARTY-NOTICES.md. */
+/** Spring AI Embedding adapter; chat and bounded batching adapted from PaiSmart. See THIRD-PARTY-NOTICES.md. */
 @Component
 public class ModelClient {
     private final AiSettings settings;
@@ -23,18 +38,25 @@ public class ModelClient {
     }
 
     public String embeddingVersion() {
-        return settings.modelEnabled() ? settings.embedding().baseUrl() + "/" + settings.embedding().model() : "local-keyword";
+        return settings.embeddingEnabled() ? "spring-ai-1.0.9/raw-v1/" + settings.effectiveEmbeddingProvider() + "/" + settings.embedding().baseUrl().replaceAll("/+$", "") + "/" + settings.embedding().model() : "local-keyword";
     }
 
     public List<double[]> embed(List<String> texts) {
-        if (!settings.modelEnabled()) throw new IllegalStateException("本地模式不产生语义向量");
+        if (!settings.embeddingEnabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "请先配置 Embedding 模型与接入方式");
+        EmbeddingModel model = embeddingModel();
         List<double[]> vectors = new ArrayList<>();
         // Keep PaiSmart's bounded batch submission; parse by index rather than response order.
         for (int start = 0; start < texts.size(); start += 32) {
             List<String> batch = texts.subList(start, Math.min(start + 32, texts.size()));
-            JsonNode response = client(settings.embedding()).post().uri("/embeddings")
-                    .body(Map.of("model", settings.embedding().model(), "input", batch, "encoding_format", "float"))
-                    .retrieve().body(JsonNode.class);
+            EmbeddingResponse response;
+            try {
+                response = model.call(new EmbeddingRequest(batch, null));
+            } catch (ResourceAccessException | RestClientResponseException e) {
+                throw e;
+            } catch (RestClientException | IllegalArgumentException | NullPointerException e) {
+                // Malformed upstream JSON can fail inside Spring AI before our vector validation.
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回的响应格式不正确");
+            }
             vectors.addAll(parseEmbeddings(response, batch.size()));
         }
         return vectors;
@@ -50,6 +72,28 @@ public class ModelClient {
     }
 
     private RestClient client(AiSettings.Provider provider) {
+        return clientBuilder(provider).build();
+    }
+
+    private EmbeddingModel embeddingModel() {
+        AiSettings.Provider provider = settings.embedding();
+        var http = clientBuilder(provider);
+        if (settings.effectiveEmbeddingProvider() == AiSettings.EmbeddingProvider.OLLAMA) {
+            var api = OllamaApi.builder().baseUrl(provider.baseUrl().replaceAll("/+$", "")).restClientBuilder(http)
+                    .responseErrorHandler(new DefaultResponseErrorHandler()).build();
+            // Direct model construction uses NEVER pull by default, so startup never downloads models.
+            return OllamaEmbeddingModel.builder().ollamaApi(api)
+                    .defaultOptions(OllamaOptions.builder().model(provider.model()).truncate(false).build()).build();
+        }
+        var key = provider.apiKey() == null || provider.apiKey().isBlank() ? new NoopApiKey() : new SimpleApiKey(provider.apiKey());
+        var api = OpenAiApi.builder().baseUrl(provider.baseUrl().replaceAll("/+$", "")).apiKey(key).embeddingsPath("/embeddings")
+                .restClientBuilder(http).responseErrorHandler(new DefaultResponseErrorHandler()).build();
+        return new OpenAiEmbeddingModel(api, MetadataMode.EMBED,
+                OpenAiEmbeddingOptions.builder().model(provider.model()).encodingFormat("float").build(),
+                RetryTemplate.builder().maxAttempts(1).build());
+    }
+
+    private RestClient.Builder clientBuilder(AiSettings.Provider provider) {
         if (provider.model() == null || provider.model().isBlank()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "请先配置模型名称与模型接口，再启用 openai 模式");
         }
@@ -58,31 +102,30 @@ public class ModelClient {
         factory.setReadTimeout(Duration.ofSeconds(60));
         RestClient.Builder configured = builder.clone().baseUrl(baseUrl).requestFactory(factory);
         if (provider.apiKey() != null && !provider.apiKey().isBlank()) configured.defaultHeader("Authorization", "Bearer " + provider.apiKey());
-        return configured.build();
+        return configured;
     }
 
-    static List<double[]> parseEmbeddings(JsonNode response, int expected) {
-        JsonNode data = response == null ? null : response.get("data");
-        if (data == null || !data.isArray() || data.size() != expected) {
+    static List<double[]> parseEmbeddings(EmbeddingResponse response, int expected) {
+        List<Embedding> data = response == null ? null : response.getResults();
+        if (data == null || data.size() != expected) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回的向量数量不正确");
         }
         double[][] ordered = new double[expected][];
         int dimension = -1;
-        for (JsonNode item : data) {
-            int index = item.path("index").asInt(-1);
-            JsonNode embedding = item.path("embedding");
-            if (index < 0 || index >= expected || ordered[index] != null || !embedding.isArray() || embedding.isEmpty()) {
+        for (Embedding item : data) {
+            int index = item.getIndex();
+            float[] embedding = item.getOutput();
+            if (index < 0 || index >= expected || ordered[index] != null || embedding == null || embedding.length == 0) {
                 throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回的索引或向量格式不正确");
             }
-            if (dimension != -1 && dimension != embedding.size()) {
+            if (dimension != -1 && dimension != embedding.length) {
                 throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回的向量维度不一致");
             }
-            dimension = embedding.size();
+            dimension = embedding.length;
             double[] vector = new double[dimension];
             double norm = 0;
             for (int i = 0; i < dimension; i++) {
-                if (!embedding.get(i).isNumber()) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回了非数字向量");
-                vector[i] = embedding.get(i).asDouble();
+                vector[i] = embedding[i];
                 if (!Double.isFinite(vector[i])) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Embedding 返回了无效向量");
                 norm += vector[i] * vector[i];
             }

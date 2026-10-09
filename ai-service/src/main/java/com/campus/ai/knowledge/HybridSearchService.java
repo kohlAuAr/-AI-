@@ -27,7 +27,7 @@ public class HybridSearchService {
     @Transactional(readOnly = true)
     public SearchResponse search(String query) {
         List<KnowledgeChunk> candidates = chunks.findAll();
-        boolean vectorSearch = settings.modelEnabled() && candidates.stream().anyMatch(this::compatible);
+        boolean vectorSearch = settings.modelEnabled() && settings.embeddingEnabled() && candidates.stream().anyMatch(this::compatible);
         double[] queryVector = vectorSearch ? models.embed(List.of(query)).get(0) : null;
         Set<String> terms = queryTerms(query);
         List<Citation> results = new ArrayList<>();
