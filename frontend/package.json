@@ -10,6 +10,8 @@
     "test:business": "node scripts/test-business.mjs",
     "test:finance": "node scripts/test-finance.mjs",
     "test:finance:live": "node scripts/check-finance-live.mjs",
+    "test:check-in": "node scripts/test-check-in.mjs",
+    "test:check-in:live": "node scripts/check-check-in-live.mjs",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5178 --strictPort"
   },

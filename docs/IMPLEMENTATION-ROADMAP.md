@@ -1,12 +1,12 @@
 # 从骨架到毕业设计的开发顺序
 
-当前入社、活动发布/报名、站内通知、首页轮播管理、注册/个人资料和经费台账已接入页面；社团维护、活动编辑/取消/签到和账号收藏已具备后端，前端仍待补齐。分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`、`PLATFORM-BANNERS.md`、`ACCOUNT-PROFILE-WORKFLOW.md` 和 `FINANCE-WORKFLOW.md`。后续仍按一条业务从页面到接口逐项验收，不把菜单数量当作完成度。
+当前入社、活动发布/报名/签到、站内通知、首页轮播管理、注册/个人资料和经费台账已接入页面；社团维护、活动编辑/取消和账号收藏已具备后端，前端仍待补齐。分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`、`PLATFORM-BANNERS.md`、`ACCOUNT-PROFILE-WORKFLOW.md`、`FINANCE-WORKFLOW.md` 和 `CHECK-IN-WORKFLOW.md`。后续仍按一条业务从页面到接口逐项验收，不把菜单数量当作完成度。
 
 | 顺序 | 要补齐的内容 | 后端起点 | 前端起点 | 验收方式 |
 |---|---|---|---|---|
 | 1 | 学生注册/资料已接页面；下一步补负责人社团维护页面 | `identity`、`club` | 登录、个人页及管理页 | 注册只能学生；资料只能本人；社团只能所属负责人维护 |
 | 2 | 招新与成员链已接入页面；招新条件维护 API 已实现，补编辑页面 | `recruitment`、`membership`、`club` | `BusinessPersonalView.vue`、`BusinessManageView.vue` | 审核与成员事务、重复/越权拦截、招新开关及重启保留 |
-| 3 | 活动草稿/发布/报名已接页面；编辑/取消/签到后端已实现，补页面 | `activity`、`registration` | `community/Community*Activit*.vue` | 有人报名不改时地、取消通知、码权限、签到防重与数据保留 |
+| 3 | 活动草稿/发布/报名/签到已接页面；编辑/取消后端已实现，补页面 | `activity`、`registration` | `community/Community*Activit*.vue` | 有人报名不改时地、取消通知、码权限、签到防重与数据保留 |
 | 4 | 站内通知已实现；实时推送未做 | `notification` | `community/CommunityMessagesView.vue` | 业务与通知同事务、本人分页与已读、结果跳转及重启保留，见通知验证记录 |
 | 5 | 经费台账页面已接入，账号收藏仍待页面对接 | `finance`、`favorite` | `/manage/finance`、收藏页 | 经费金额显示、同笔防重、作废留痕、跨账号隔离及重启保留；见 FINANCE-WORKFLOW.md |
 | 6 | 自由文本推荐已用本机模型联调，并加入 BM25/RRF；下一步固定样本效果评估 | `identity/ProfileService`、`ai/RecommendationController`；AI `recommendation` | `/me` 兴趣描述 → `/assistant` 获取推荐 | 当前仅校验招新开关；文字资格/时间仍由本人确认，见兴趣推荐说明 |
