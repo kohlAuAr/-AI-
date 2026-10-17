@@ -26,7 +26,7 @@ if ($BackupData) {
     }
 }
 # Parse only known settings, never execute local configuration or print credentials.
-$allowedKeys = @('AI_INTERNAL_TOKEN', 'AI_MODE', 'AI_REDIS_ENABLED', 'CHAT_BASE_URL', 'CHAT_MODEL', 'CHAT_API_KEY', 'EMBEDDING_PROVIDER', 'EMBEDDING_BASE_URL', 'EMBEDDING_MODEL', 'EMBEDDING_API_KEY', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'SPRING_PROFILES_ACTIVE')
+$allowedKeys = @('AI_INTERNAL_TOKEN', 'AI_CONFIG_MASTER_KEY', 'AI_MODEL_ALLOWED_URLS', 'AI_MODE', 'AI_REDIS_ENABLED', 'CHAT_BASE_URL', 'CHAT_MODEL', 'CHAT_API_KEY', 'EMBEDDING_PROVIDER', 'EMBEDDING_BASE_URL', 'EMBEDDING_MODEL', 'EMBEDDING_API_KEY', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'SPRING_PROFILES_ACTIVE')
 $localEnvironment = Join-Path $projectRoot '.env.local'
 if (Test-Path -LiteralPath $localEnvironment) {
     foreach ($line in Get-Content -LiteralPath $localEnvironment -Encoding UTF8) {

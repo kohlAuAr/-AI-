@@ -15,7 +15,7 @@ cd ..
 powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1
 ```
 
-`init-local.ps1` 仅在共享密钥缺失/为空时生成随机值，保存到忽略的 `.env.local`，不打印密钥，不覆盖已有模型配置。两个后端共用该密钥；IDEA 独立启动时须将同一个 `AI_INTERNAL_TOKEN` 配到两个 Run Configuration，不会自动读取根目录文件。不能放进 VITE 配置、截图或 Git。
+`init-local.ps1` 仅在密钥缺失/为空时生成随机的服务间 `AI_INTERNAL_TOKEN` 和独立的 `AI_CONFIG_MASTER_KEY`，保存到忽略的 `.env.local`，不打印密钥，不覆盖已有模型配置。两个后端共用服务间密钥；AI_CONFIG_MASTER_KEY 仅由 AI 服务用于加密平台管理员保存的模型密钥，应单独安全备份，丢失/更换后无法解密原密钥。IDEA 独立启动时须配置对应 Run Configuration，不会自动读取根目录文件。不能放进 VITE 配置、截图或 Git。
 
 若本项目已运行，先执行 `scripts/stop-dev.ps1`，再打包；不要在 Windows 下直接覆盖正在使用的 JAR。启动后等日志显示两个服务 `Started`，再打开 [社遇](http://127.0.0.1:5178/)。端口为校园 8090、AI 8091、前端 5178；只监听本机，不提供公网服务。`.run/` 保存日志及测试记录，不上传 Git。
 
@@ -45,7 +45,7 @@ demo 密码均为 `CampusDemo123!`，只用于本机虚构账号：`student`/`st
 2. 负责人：社团资料与招新开关 → 申请审核 → 成员列表；关闭招新仍保留已有申请和成员。
 3. 活动：新建或 AI 策划参考 → 修改 → 人工确认保存草稿 → 单独发布 → 学生报名 → 负责人名单/签到 → 查看签到时间。现场码只在开始前 30 分钟起能开启，不能为演示绕过时间规则。
 4. 经费：设置活动预算 → 录入支出 → 显示余额/超支 → 误录作废保留原因。不是付款、报销审批或社团银行余额。
-5. 平台：上传/调整首页海报并确认上下架。活动取消、开始或招新结束后，相应展示按查询规则过滤。
+5. 平台：上传/调整首页海报并确认上下架；在 `/platform/models` 分别配置聊天与 Embedding，通过检测、保存、测试、确认启用提供全校统一 AI。活动取消、开始或招新结束后，相应海报按查询规则过滤。模型设置的安全边界与环境变量优先级见 [平台模型设置](PLATFORM-MODELS.md)。
 6. AI：自由兴趣推荐展示语义与文字混合排序；上传社团内部 TXT/MD，分别用成员与非成员验证权限；在助手查看真实查询轨迹与本人历史。模型可能失败或回答有误，应展示来源核对和错误边界。
 
 ## 验证与证据
@@ -60,6 +60,7 @@ npm run test:finance
 npm run test:check-in
 npm run test:club-settings
 npm run test:ai-workflows
+npm run test:model-settings
 cd ..
 node scripts/check-completion.mjs
 ```

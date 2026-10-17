@@ -35,6 +35,9 @@ management:
       enabled: ${AI_REDIS_ENABLED:false}
 service:
   internal-token: ${AI_INTERNAL_TOKEN:}
+ai-admin:
+  master-key: ${AI_CONFIG_MASTER_KEY:}
+  allowed-base-urls: ${AI_MODEL_ALLOWED_URLS:http://127.0.0.1:11434}
 ai:
   mode: ${AI_MODE:local}
   redis-enabled: ${AI_REDIS_ENABLED:false}

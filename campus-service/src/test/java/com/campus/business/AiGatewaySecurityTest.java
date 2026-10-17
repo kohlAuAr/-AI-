@@ -62,4 +62,16 @@ class AiGatewaySecurityTest {
         mvc.perform(post("/internal/ai/tools").header("X-Internal-Token", "gateway-test-token").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of("actorId", 999999, "tool", "search_clubs")))).andExpect(status().isUnauthorized());
     }
+    @Test void modelConfigurationIsPlatformOnlyWithCsrfEvenWhileAiIsOffline() throws Exception {
+        mvc.perform(get("/api/platform/models")).andExpect(status().isUnauthorized());
+        for (var session : new MockHttpSession[]{student, manager}) {
+            mvc.perform(get("/api/platform/models").session(session).header("X-Actor-Role", "PLATFORM_ADMIN")).andExpect(status().isForbidden());
+            mvc.perform(post("/api/platform/models/CHAT/save").session(session).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
+        }
+        var admin = login("platform_admin");
+        mvc.perform(post("/api/platform/models/CHAT/save").session(admin).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
+        mvc.perform(post("/api/platform/models/CHAT/delete").session(admin).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isNotFound());
+        mvc.perform(get("/api/platform/models").session(admin)).andExpect(status().isServiceUnavailable());
+        mvc.perform(get("/api/clubs")).andExpect(status().isOk());
+    }
 }

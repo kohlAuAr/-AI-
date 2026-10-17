@@ -23,6 +23,7 @@ import CommunityPersonalView from './community/CommunityPersonalView.vue';
 import CommunityAssistantView from './community/CommunityAssistantView.vue';
 import BusinessManageView from './prototype/BusinessManageView.vue';
 import CommunityPlatformBanners from './community/CommunityPlatformBanners.vue';
+import CommunityPlatformModels from './community/CommunityPlatformModels.vue';
 import { businessMode } from './prototype/business';
 
 export default createRouter({
@@ -38,6 +39,7 @@ export default createRouter({
     { path: '/me', component: CommunityPersonalView },
     { path: '/login', component: LoginView },
     { path: '/platform/banners', component: CommunityPlatformBanners },
+    { path: '/platform/models', component: CommunityPlatformModels },
     { path: '/messages', component: businessMode ? CommunityMessagesView : PersonalView },
     { path: '/manage', component: businessMode ? BusinessManageView : ManageView },
     { path: '/manage/activities', component: businessMode ? CommunityManageActivities : ManageView },
