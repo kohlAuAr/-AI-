@@ -1,5 +1,7 @@
 # 从骨架到毕业设计的开发顺序
 
+> 以下保留早期分链开发安排，描述当时顺序，不再代表当前待办。整项目收尾已补齐活动编辑/取消、账号收藏、资料权限、本人对话历史、轻量 ReAct 与人工确认草稿；当前状态和未实现边界以 `PROJECT-ACCEPTANCE.md`、`AI-ASSISTANT-WORKFLOW.md` 为准。后续正式部署工作见 `DELIVERY-GUIDE.md`。
+
 当前入社、活动发布/报名/签到、站内通知、首页轮播管理、注册/个人资料、社团维护/招新设置和经费台账已接入页面；活动编辑/取消和账号收藏已具备后端，前端仍待补齐。分别见 `RECRUITMENT-WORKFLOW.md`、`ACTIVITY-WORKFLOW.md`、`NOTIFICATION-WORKFLOW.md`、`PLATFORM-BANNERS.md`、`ACCOUNT-PROFILE-WORKFLOW.md`、`FINANCE-WORKFLOW.md`、`CHECK-IN-WORKFLOW.md` 和 `CLUB-SETTINGS-WORKFLOW.md`。后续仍按一条业务从页面到接口逐项验收，不把菜单数量当作完成度。
 
 | 顺序 | 要补齐的内容 | 后端起点 | 前端起点 | 验收方式 |

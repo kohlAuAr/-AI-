@@ -32,6 +32,7 @@ globalThis.fetch = async (url, options = {}) => {
     return response;
   }
   if (path === '/api/clubs') return failCatalog ? Response.json({ detail: '目录读取失败' }, { status: 503 }) : Response.json(clubs);
+  if (path === '/api/favorites') return Response.json([]);
   if (path === '/api/profile') return Response.json({ ...business.user, interests: [], availableTime: '', interestDescription: '' });
   if (path === '/api/activities' || path.endsWith('/registrations/mine') || path.endsWith('/my-applications') || path.endsWith('/memberships/mine') || path.endsWith('/applications') || path.endsWith('/members')) return Response.json([]);
   throw new Error(`Unexpected ${method} ${path}; settings saves must never call AI`);

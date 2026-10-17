@@ -1,16 +1,16 @@
 # 校园社团活动管理与招新平台
 
-这是一个可启动、可联通的精简毕业设计工程。校园业务后端已补齐本轮约定的范围，后续继续接入页面和 AI 能力。
+这是一个本机可运行的校园社团毕业设计工程。已实现约定的校园业务、对应页面及轻量 AI 辅助，保留两个独立后端和用户确认的社群界面。完整使用见 [运行与演示指南](docs/DELIVERY-GUIDE.md)，本轮验收与限制见 [整项目验收](docs/PROJECT-ACCEPTANCE.md)。这不是已经上线的真实学校系统。
 
 Git 历史于 2026-10-08 根据先前开发记录分阶段重建，不是当时实时保存的提交，未回填提交日期。11 个功能阶段均通过编译和对应自动化测试；重建来源、验证结果及 AI 辅助/第三方代码边界见 [Git 历史整理说明](docs/GIT-HISTORY-RECOVERY.md)。
 
 已实现：两个独立 Spring Boot 服务；Vue3 前端；学生注册、个人资料与兴趣接口；数据库社团查询及负责人创建/维护、招新开关与条件维护；Session 登录与所属社团权限；入社申请、审核、撤回和成员关系；活动草稿、编辑、确认发布、取消及报名者通知；报名/取消、名额与截止校验、负责人报名与签到名单；签到码开启/关闭与学生签到；活动预算、支出防重、作废留痕、社团汇总；账号收藏；站内结果通知、账号隔离、分页与已读状态；公开 UTF-8 文本上传、分块、检索、出处展示和会话记录；可配置的真实模型与 Embedding 接口；可选 Redis 短期上下文。
 
-待实现：新增校园后端接口的页面接入、找回密码、正式学校身份认证、完整 AI 资料权限、AI 活动策划与人工确认、ReAct、MCP、DAG。兴趣推荐已用 Spring AI 接通本机 Ollama，并加入 BM25 与 RRF 融合排序；正式推荐效果评估仍待完成。当前页面明确区分数据库功能与演示功能。
+本轮补齐：活动编辑/取消与账号收藏页面，账号专属 AI 对话和历史、公开/社团资料权限、真实只读工具与有步数上限的轻量 ReAct、活动策划参考及人工确认保存草稿。兴趣推荐使用 Embedding + BM25 + RRF。见 [AI 辅助与人工确认](docs/AI-ASSISTANT-WORKFLOW.md)。未实现学校身份认证、密码找回、正式用户管理、外部 MCP、DAG 引擎及多智能体；正式模型效果与容量评估仍需另做。
 
-注册与个人资料链已接入前端：`/login` 注册学生账号后登录，在 `/me` 编辑姓名、专业、兴趣描述、辅助标签和空闲时间，保存到当前账号数据库。`/assistant` 综合社团名称、类别、简介、标签，使用 Embedding + BM25，再以 RRF 融合排名；验收脚本社团退出推荐但保留业务记录。需配置模型，未配置时明确提示不可用，不显示模拟推荐。资料保存不调用 AI。见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。活动编辑/取消和账号收藏已可通过 API 使用，页面仍待接入；社团维护、签到和经费台账页面已接通；当前收藏页面仍是浏览器本地数据。范围、请求示例与源码路线见 [校园后端业务说明](docs/CAMPUS-BACKEND-WORKFLOW.md)，账号链使用与验收见 [账号与个人资料](docs/ACCOUNT-PROFILE-WORKFLOW.md)。
+注册与个人资料链已接入前端：`/login` 注册学生账号后登录，在 `/me` 编辑资料、自由兴趣描述和空闲时间，保存到当前账号数据库。`/assistant` 综合社团名称、类别、简介、标签，以 Embedding + BM25 + RRF 排名；特定验收社团退出推荐但保留业务记录。未配置模型时明确提示不可用，不显示模拟推荐，资料保存不调用 AI。见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。活动编辑/取消、账号收藏、社团维护、签到和经费台账页面均已接通；只有纯原型仍使用浏览器本地收藏。范围与请求说明见 [校园后端业务说明](docs/CAMPUS-BACKEND-WORKFLOW.md) 和 [账号与个人资料](docs/ACCOUNT-PROFILE-WORKFLOW.md)。
 
-当前全部可访问前端页面已统一到用户认可的白底绿色社群风格，包括主入口、登录、详情、消息、负责人各栏目、使用说明及 `/system` 资料问答与联调页。表单与弹窗共用控件风格，保留原有业务记录和模式边界。此项是全页面视觉统一，不代表新增后端接口已全部接入页面，也没有新增 AI 能力。见 [全页面界面验证记录](docs/COMMUNITY-UI-VERIFICATION.md)。
+前端沿用用户认可的白底绿色社群风格，包括登录、详情、消息、负责人栏目及 `/system` 联调页。表单和确认弹窗复用已有风格，保留原型归档。早期视觉统一的阶段记录见 [界面验证记录](docs/COMMUNITY-UI-VERIFICATION.md)，当前功能状态以本轮验收为准。
 
 首页内容管理已接通：新增 `PLATFORM_ADMIN` 角色，管理 PNG/JPG 海报上传、站内关联内容、顺序、展示时间及确认上下架；发现页显示数据库轮播，支持自动/手动切换和暂停。管理员不继承社团负责人权限。demo 账号 `platform_admin`，密码 `CampusDemo123!`，登录后进入 `/platform/banners`；手机也可从“我的”进入。仅 demo 配置创建三个虚构示例海报，纯前端原型不调用管理接口，旧原型归档不变。见 [首页内容管理说明与验收](docs/PLATFORM-BANNERS.md)。
 
@@ -32,7 +32,7 @@ Git 历史于 2026-10-08 根据先前开发记录分阶段重建，不是当时�
 
 第三条通知链：审核结果、报名与取消成功 → 同一事务保存站内通知 → 消息中心查看相关记录、标为已读。打开 `/messages` 或顶部铃铛；没有实时推送，也不补造此前的历史通知。见 [通知业务说明](docs/NOTIFICATION-WORKFLOW.md) 和 [通知验证](docs/NOTIFICATION-VERIFICATION.md)。
 
-纯原型模式展示“社遇”学生端及负责人工作台，可以模拟申请、审核、成员、活动草稿、发布、报名、收藏和消息；此模式的记录仍只保存在当前浏览器，助手保留明确标注的标签筛选。正常开发模式中，注册/资料、入社、活动发布/报名/签到、经费与消息已接后端，收藏仍仅存在浏览器；助手语义推荐按需调用已配置的 Embedding 模型。原有资料联调页保留在 `/system`。
+纯原型模式展示“社遇”学生端及负责人工作台，模拟数据只保存在当前浏览器，助手保留明确标注的标签筛选，不调用业务或模型服务。正常开发模式中业务使用校园数据库，收藏绑定账号；助手按需调用模型。资料问答和知识库也可从 `/system` 进入。
 
 只看原型，不需要 Java、Redis 或大模型：
 
@@ -52,6 +52,7 @@ powershell -ExecutionPolicy Bypass -File C:\workspace\campus-club-platform\scrip
 
 ```powershell
 cd C:\workspace\campus-club-platform
+powershell -ExecutionPolicy Bypass -File .\scripts\init-local.ps1
 mvn -DskipTests=false package
 cd frontend
 npm ci
@@ -59,7 +60,7 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
 ```
 
-等待约 15 秒，打开 http://127.0.0.1:5178 。可执行 `node scripts/smoke.mjs` 检查前端代理、两个服务、资料上传、问答与历史。停止本项目：
+等待两个后端日志显示 Started，打开 http://127.0.0.1:5178 。默认 LOCAL 可执行 `node scripts/smoke.mjs`；本机 OLLAMA 用 `node scripts/check-completion.mjs`。`init-local.ps1` 为两个服务生成共享内部密钥，保留已有模型设置，不打印密钥。停止本项目：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\stop-dev.ps1
@@ -101,7 +102,7 @@ campus-club-platform/
 
 默认 `AI_MODE=local`：无需数据库安装和模型密钥。H2 文件库分别位于各后端工作目录的 `data/`；上传文本后进行关键词检索，返回原文摘录与出处。**LOCAL 问答不调用 LLM、不做语义检索；兴趣推荐可独立启用 Embedding。** 不配置 Embedding 时，推荐明确提示不可用。
 
-真实模型模式：复制 `.env.example` 为 `.env.local`，设置 `AI_MODE=openai`，填写 `CHAT_BASE_URL`、`CHAT_MODEL`、`CHAT_API_KEY`、`EMBEDDING_BASE_URL`、`EMBEDDING_MODEL`、`EMBEDDING_API_KEY`。文件使用 `KEY=VALUE`，值不加引号，也不执行变量替换。Base URL 填兼容接口的根路径，例如服务提供的 `/v1` 根地址；不要填完整 `/chat/completions` 或 `/embeddings` 路径。更改后重新启动本项目。
+真实模型模式：运行初始化脚本后编辑 `.env.local`，保留 `AI_INTERNAL_TOKEN`，设置 `AI_MODE=openai` 并填写聊天与 Embedding 的地址、名称和密钥。文件使用 `KEY=VALUE`，值不加引号，不执行变量替换。兼容 API 地址填 `/v1` 等服务根路径，不填完整调用路径；原生 Ollama 则不带 `/v1`。修改后重启本项目。模型密钥和服务间密钥不同，都不能放入前端或 Git。
 
 真实模式下重新上传资料，才会生成与当前模型对应的向量。更换 Embedding 模型或维度应重新建立索引；本地模式旧资料仍可被关键词检索。启动服务不会自动调用付费模型。模型故障返回明确错误，不偷偷用本地摘录冒充模型回答。
 
@@ -128,13 +129,13 @@ EMBEDDING_API_KEY=
 
 在上面的原生 Embedding 配置基础上，将 `AI_MODE` 改为 `ollama`，增加 `CHAT_BASE_URL=http://127.0.0.1:11434`、`CHAT_MODEL=qwen2.5:3b`、`CHAT_API_KEY=`。必须先安装模型并由用户打开 Ollama，项目不会代为下载模型。
 
-重新启动 AI 后，在 `/system/knowledge` 重新上传公开测试资料建立当前模型索引，在 `/system/chat` 提问；也可以从 `/assistant` 的“打开资料问答”进入。流程为上传→分块→向量存储→关键词与向量检索→Spring AI 调用聊天模型→保存回答与原文出处。旧资料与历史引用保留，不自动批量重建索引。模型回答不是审核结论，不能替代实时业务查询。
+重启 AI 后，平台管理员可在 `/system/knowledge` 上传公开资料，负责人上传所属社团内部资料；学生仅可读取自己可见的内容。资料重新上传后建立当前模型索引。在 `/assistant` 或 `/system/chat` 提问，回答与引用保存到本人会话。旧资料保留，不自动重建索引；旧无归属会话隔离保留，不随便绑定账号。模型回答不是审核结论，正式业务事实可用只读工具查询。
 
 使用 `node scripts/check-ollama-rag.mjs` 验收，`restored` 检查重启后的资料、回答和引用，`offline` 检查只停止项目 AI 后校园业务仍可查询。原 `scripts/smoke.mjs` 继续限定 LOCAL 模式，防止误调用外部收费模型。具体实现、使用方法和验收边界见 [RAG 问答说明](docs/RAG-WORKFLOW.md)。
 
 ## 当前边界
 
-- 服务默认只监听 `127.0.0.1`，仅用于本地开发；已实现入社业务登录与权限，但 AI 联调接口仍使用公开测试资料，尚无完整用户/社团资料隔离及限流。不得因新增登录就公开部署。
+- 服务只监听 `127.0.0.1`，仅供本机开发；已有账号/社团范围隔离和内部共享密钥，但未做正式限流、容量压测或生产安全审计，不可直接公开部署。
 - 只支持 `.md` / `.txt`，UTF-8 编码，单文件 128KB、最多 128 分块；PDF、Word、OCR、大文件异步上传未实现。
 - 当前向量存在 AI 数据库，以精确余弦扫描支持小规模数据；这不是 Elasticsearch 或大规模 ANN 检索实现。后续有需要再迁移检索组件。
 - 默认不启用 Redis；设置 `AI_REDIS_ENABLED=true` 后缓存最近 6 轮对话两小时，完整问答和引用始终在 AI 数据库。

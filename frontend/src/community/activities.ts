@@ -4,7 +4,7 @@ import { business, businessMode } from '../prototype/business';
 import { toast } from '../prototype/store';
 import { refreshNotifications } from './notifications';
 
-export interface Activity { id: number; clubId: number; title: string; description: string; location: string; startTime: string; registrationDeadline: string; capacity: number; enrolled: number; status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED'; demo: boolean; checkInOpen: boolean }
+export interface Activity { id: number; clubId: number; title: string; description: string; location: string; startTime: string; registrationDeadline: string; capacity: number; enrolled: number; status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED'; demo: boolean; checkInOpen: boolean; cancelReason?: string; cancelledAt?: string }
 export interface Registration { id: number; activityId: number; clubId: number; title: string; startTime: string; location: string; status: 'REGISTERED' | 'CANCELLED'; registeredAt: string; cancelledAt: string | null; checkedInAt: string | null }
 export interface Participant { id: number; name: string; major: string; registeredAt: string; checkedInAt: string | null }
 export type Draft = Pick<Activity, 'title' | 'description' | 'location' | 'startTime' | 'registrationDeadline' | 'capacity'>;
@@ -34,13 +34,13 @@ export async function refreshActivities() {
     if (ticket === generation) { activityState.error = errorMessage(error); activityState.activities = []; activityState.registrations = []; activityState.managed = []; }
   } finally { if (ticket === generation) activityState.loading = false; }
 }
-async function mutate(path: string, body?: Draft | { code: string }) {
+async function mutate(path: string, body?: Draft | { code: string } | { reason: string }, method = 'POST') {
   if (activityState.saving) return false;
   const ticket = ++writeGeneration, userId = business.user?.id, clubId = business.managedClubId;
   const current = () => ticket === writeGeneration && userId === business.user?.id && clubId === business.managedClubId;
   activityState.saving = true; activityState.writeError = '';
   try {
-    await request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    await request(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     if (!current()) return false;
     await refreshActivities();
     if (!current()) return false;
@@ -53,6 +53,8 @@ async function mutate(path: string, body?: Draft | { code: string }) {
 }
 export function saveDraft(clubId: number, body: Draft) { return mutate(`/manage/clubs/${clubId}/activities`, body); }
 export function publishActivity(id: number) { return mutate(`/manage/activities/${id}/publish`); }
+export function editActivity(id: number, body: Draft) { return mutate(`/manage/activities/${id}`, body, 'PUT'); }
+export function cancelManagedActivity(id: number, reason: string) { return mutate(`/manage/activities/${id}/cancel`, { reason }); }
 export function registerActivity(id: number) { return mutate(`/activities/${id}/registrations`); }
 export function cancelActivityRegistration(id: number) { return mutate(`/activities/${id}/registrations/cancel`); }
 export function checkInActivity(id: number, code: string) {

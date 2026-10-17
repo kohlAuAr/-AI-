@@ -58,12 +58,12 @@ async function signOut() { try { await logout(); toast('已退出登录'); } cat
       </main>
       <aside class="community-rightbar">
         <section class="community-side-section"><h2>我的社团</h2><template v-if="businessMode && !business.user"><p>登录后查看已加入的社团。</p><RouterLink to="/login" class="community-side-login">登录</RouterLink></template><template v-else><RouterLink v-for="club in joinedClubs" :key="club.id" :to="`/clubs/${club.id}`" class="community-joined-link"><span class="community-small-cover" :class="`cover-${club.id}`"><CommunityIcon :name="club.id" /></span><span>{{ club.name }}</span><CommunityIcon name="chevron" /></RouterLink><p v-if="!joinedClubs.length">还没有加入社团。</p></template><RouterLink to="/me" class="community-side-more">查看入社申请<CommunityIcon name="chevron" /></RouterLink></section>
-        <section class="community-side-section community-note"><h2>本地演示</h2><p>{{ businessMode ? '社团、申请与成员关系来自本地数据库，人物与资料均为虚构。' : '交互原型使用虚构数据，非真实报名。' }}</p><p>收藏仅保存在当前浏览器。</p></section>
+        <section class="community-side-section community-note"><h2>本地演示</h2><p>{{ businessMode ? '社团、申请与成员关系来自本地数据库，人物与资料均为虚构。' : '交互原型使用虚构数据，非真实报名。' }}</p><p>{{ businessMode ? '收藏保存在当前账号。' : '收藏仅保存在当前浏览器。' }}</p></section>
       </aside>
     </div>
     <nav class="community-bottom-nav" aria-label="手机底部导航"><RouterLink v-for="item in navigation" :key="item.path" :to="item.path" :class="{ current: current(item.path) }" :aria-current="current(item.path) ? 'page' : undefined"><CommunityIcon :name="item.icon" /><span>{{ item.label }}</span></RouterLink></nav>
     <div v-if="ui.toast" class="community-toast" role="status">{{ ui.toast }}</div>
-    <div v-if="ui.storageUnavailable" class="community-storage-note" role="alert">当前浏览器无法保存收藏，刷新后可能丢失。</div>
+    <div v-if="!businessMode && ui.storageUnavailable" class="community-storage-note" role="alert">当前浏览器无法保存收藏，刷新后可能丢失。</div>
   </div>
 </template>
 <style src="./community.css"></style>

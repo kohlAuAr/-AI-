@@ -13,6 +13,8 @@ function check(condition, label) { assert.ok(condition, label); assertions++; }
 try {
   const store = await server.ssrLoadModule('/src/prototype/store.ts');
   const { state } = store;
+  // Keep signup fixtures in the future regardless of the developer machine's current date.
+  state.activities.forEach(activity => { activity.date = '2099-10-17'; });
   const activities = await server.ssrLoadModule('/src/community/activities.ts');
   let businessFetches = 0;
   globalThis.fetch = async () => { businessFetches++; throw new Error('Pure prototype must not fetch business APIs'); };
@@ -61,6 +63,7 @@ try {
   store.resetPrototype(); await nextTick();
   check(!state.applications.some(a => a.mine) && state.registrations.length === 0, 'reset restores demo');
   check(JSON.parse(storage.get('campus-prototype-v1')).activities.length === 4, 'reset persisted');
+  state.activities.forEach(activity => { activity.date = '2099-10-17'; });
 
   const router = (await server.ssrLoadModule('/src/router.ts')).default;
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
@@ -73,7 +76,7 @@ try {
     ['/manage', '工作概览'], ['/manage/recruitment', '查看并审核'],
     ['/manage/members', '新增成员'], ['/manage/activities', '新建活动'],
     ['/manage/finance', '计划预算合计'], ['/assistant', '共同兴趣'], ['/guide', '原型'],
-    ['/chat', '资料问答'], ['/knowledge', '上传资料'], ['/system', '刷新状态'],
+    ['/chat', '资料问答'], ['/knowledge', '资料知识库'], ['/system', '刷新状态'],
     ['/system/clubs', '社团接口'], ['/system/activities', '活动接口'], ['/roadmap', '后续开发']
   ];
   const covered = new Set();
@@ -100,7 +103,7 @@ try {
     check(!html.includes('p-kicker') && !html.includes('p-hero') && !html.includes('p-detail-hero') && !html.includes('eyebrow'), `${path}: no old marketing headings`);
     check(html.includes('community-bottom-nav'), `${path}: persistent mobile navigation`);
     if (path.startsWith('/manage')) check(html.includes('aria-label="负责人导航"') && html.includes('经费台账'), `${path}: all manager destinations stay reachable`);
-    if (router.currentRoute.value.path.startsWith('/system')) check(html.includes('aria-label="联调导航"') && html.includes('尚未完成私有资料权限隔离'), `${path}: development navigation and privacy boundary`);
+    if (router.currentRoute.value.path.startsWith('/system')) check(html.includes('aria-label="联调导航"') && html.includes('资料按账号与社团范围读取'), `${path}: development navigation and privacy boundary`);
     if (path === '/recruitment' || path === '/clubs?recruiting=true') {
       check(router.currentRoute.value.fullPath === '/clubs?recruiting=true', 'recruitment entry resolves to club filter');
       check(html.includes('<h1>社团</h1>'), 'recruitment stays inside the club directory');

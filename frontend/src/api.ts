@@ -8,9 +8,10 @@ export interface SystemInfo { name: string; security: string; modules: ModuleSta
 export interface AiStatus { mode: 'LOCAL' | 'OPENAI' | 'OLLAMA'; knowledgeDocuments: number; retrieval: string; sessionStore: string; scope: string; agent: string }
 export interface Club { id: number; name: string; category: string; description: string; tags: string; campus: string; demo: boolean }
 export interface Activity { id: number; clubId: number; title: string; location: string; startTime: string; capacity: number; status: string; demo: boolean }
-export interface KnowledgeDocument { id: number; name: string; chunkCount: number; embeddingVersion: string; createdAt: string; scope: string }
+export interface KnowledgeDocument { id: number; name: string; chunkCount: number; embeddingVersion: string; createdAt: string; scope: string; clubId?: number | null }
 export interface Citation { documentId: number; documentName: string; chunkNumber: number; excerpt: string; score: number }
-export interface Turn { question: string; answer: string; references: Citation[]; mode: string; retrieval: string; createdAt: string }
+export interface ToolStep { tool: string; query: string; id: number | null; observation: string }
+export interface Turn { question: string; answer: string; references: Citation[]; mode: string; retrieval: string; createdAt: string; steps?: ToolStep[] }
 export interface Reply extends Omit<Turn, 'question'> { conversationId: string }
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {

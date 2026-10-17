@@ -62,6 +62,7 @@ globalThis.fetch = async (url, options = {}) => {
     return Response.json({ status: 'OK' });
   }
   if (path.endsWith('/auth/session')) return Response.json({ user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf', demoAccounts: true });
+  if (path === '/api/favorites') return Response.json([]);
   if (path === '/api/profile') { assert(user, 'anonymous sessions must not request a profile'); return Response.json(profileFor(user)); }
   if (path === '/api/platform/banners' || path === '/api/platform/banner-targets') { assert.equal(user?.role, 'PLATFORM_ADMIN', 'non-admin page must not fetch platform management data'); return Response.json([]); }
   if (path.startsWith('/api/notifications?')) { const mine = notices.filter(n => n.userId === user?.id); const response = Response.json({ items: mine, total: mine.length, unread: mine.filter(n => !n.readAt).length, page: 0, hasMore: false }); if (delayInbox) { const pause = delayInbox; delayInbox = null; await pause; } return response; }
@@ -92,9 +93,9 @@ try {
   const App = (await server.ssrLoadModule('/src/App.vue')).default;
   async function page(path) { await router.push(path); await router.isReady(); return renderToString(createSSRApp(App).use(router)); }
   const chatPage = await page('/system/chat');
-  assert(chatPage.includes('正在确认问答模式'), 'unloaded status must not imply LOCAL mode');
-  assert(chatPage.includes('模型回答可能有误'), 'RAG page discloses generated answer uncertainty');
-  assert(chatPage.includes('当前只读问答'), 'RAG page cannot imply automatic business actions');
+  assert(!chatPage.includes('本地资料摘录'), 'unloaded conversation must not imply LOCAL mode');
+  assert(chatPage.includes('回答仍需核对来源'), 'RAG page discloses generated answer uncertainty');
+  assert(chatPage.includes('不会替你报名、审批或发布'), 'RAG page cannot imply automatic business actions');
   const directory = await page('/clubs');
   assert(directory.includes('community-search'));
   assert(directory.includes('只看招新中'), 'club directory exposes recruitment filtering');

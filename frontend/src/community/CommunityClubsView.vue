@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { categories } from '../prototype/data';
 import { business, businessMode, clubCatalog, refreshBusiness } from '../prototype/business';
-import { state, toggleFavorite } from '../prototype/store';
+import { favoriteClubIds, toggleClubFavorite, favoriteState } from './favorites';
 import CommunityIcon from './CommunityIcon.vue';
 const keyword = ref('');
 const category = ref('全部');
@@ -30,11 +30,11 @@ const matches = computed(() => clubCatalog.value.filter(club => (!recruitment.va
             <span class="community-club-cover" :class="`cover-${club.id}`" aria-hidden="true"><CommunityIcon :name="club.id" /></span>
             <div class="community-club-copy"><div class="community-club-title"><h3>{{ club.name }}</h3><span v-if="club.recruiting" class="community-recruiting">招新中</span><span v-else class="community-recruiting ended">已结束</span></div><p class="community-club-description">{{ club.description }}</p><p v-if="recruitment" class="community-recruit-requirements">加入条件：{{ club.requirements }}</p><div class="community-club-meta"><span>{{ club.category }}</span><span>{{ club.members }} 位成员</span><span v-if="recruitment" class="community-recruiting">查看并申请</span></div><p class="community-club-meeting">{{ club.schedule }}<span class="community-meeting-place">{{ club.place }}</span></p></div>
           </RouterLink>
-          <button type="button" class="community-save" :class="{ saved: state.favorites.includes(club.id) }" :aria-pressed="state.favorites.includes(club.id)" :aria-label="`${state.favorites.includes(club.id) ? '取消收藏' : '收藏'}${club.name}`" @click="toggleFavorite(club.id)"><CommunityIcon name="bookmark" /></button>
+          <button type="button" class="community-save" :disabled="businessMode && (favoriteState.saving || business.loading)" :class="{ saved: favoriteClubIds.includes(club.id) }" :aria-pressed="favoriteClubIds.includes(club.id)" :aria-label="`${favoriteClubIds.includes(club.id) ? '取消收藏' : '收藏'}${club.name}`" @click="toggleClubFavorite(club.id)"><CommunityIcon name="bookmark" /></button>
         </article>
         <div v-if="!matches.length" class="community-list-message"><h3>没有找到匹配的社团</h3><p>换个关键词，或清除筛选再试试。</p><button type="button" @click="keyword = ''; category = '全部'; setRecruitment(false)">清除筛选</button></div>
       </template>
     </section>
-    <p class="community-list-disclosure">{{ businessMode ? '虚构社团资料 · 入社申请保存在本地数据库' : '虚构社团资料 · 非真实报名' }}<br />收藏仅保存在当前浏览器</p>
+    <p class="community-list-disclosure">{{ businessMode ? '虚构社团资料 · 入社申请保存在本地数据库' : '虚构社团资料 · 非真实报名' }}<br />{{ businessMode ? '收藏保存在当前账号' : '收藏仅保存在当前浏览器' }}</p>
   </div>
 </template>

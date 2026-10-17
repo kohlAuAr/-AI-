@@ -1,0 +1,85 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { createServer } from 'vite';
+import { createSSRApp } from 'vue';
+import { renderToString } from '@vue/server-renderer';
+
+globalThis.localStorage = { getItem: () => null, setItem: () => {} };
+const selection = new Map();
+globalThis.sessionStorage = { getItem: key => selection.get(key) || null, setItem: (key, value) => selection.set(key, value), removeItem: key => selection.delete(key) };
+const student = { id: 1, username: 'student', name: '测试学生', major: '计算机', role: 'STUDENT', managedClubIds: [] };
+const manager = { ...student, id: 2, username: 'manager', name: '测试负责人', role: 'MANAGER', managedClubIds: [10, 20] };
+const id = randomUUID(); let business, calls = [], delayed, loseDraft = false;
+const drafts = new Map(), savedHistory = [{ question: '旧问题', answer: '本人历史', references: [], steps: [], mode: 'LOCAL', retrieval: 'KEYWORD', createdAt: new Date().toISOString() }];
+globalThis.fetch = async (url, options = {}) => {
+  const path = String(url), method = options.method || 'GET';
+  if (path === '/api/auth/session') return Response.json({ user: business.user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf' });
+  calls.push({ path, method, body: options.body });
+  if (method !== 'GET') assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
+  let response;
+  if (path === '/api/ai/conversations') response = Response.json([{ id, createdAt: new Date().toISOString() }]);
+  else if (path === `/api/ai/conversations/${id}`) response = Response.json(savedHistory);
+  else if (path === '/api/ai/chat' || path === '/api/ai/assistant') response = Response.json({ conversationId: id, answer: '当前账号回答', references: [], steps: [{ tool: 'search_clubs', query: '摄影', id: null, observation: '{"items":[]}' }], mode: 'OLLAMA', retrieval: 'REACT_TOOLS', createdAt: new Date().toISOString() });
+  else if (path === '/api/ai/plans') response = Response.json({ requestId: id, title: '构图交流', description: '分享构图经验，安排待确认。', mode: 'OLLAMA', notice: '人工确认' });
+  else if (path.includes('/drafts/')) {
+    const body = JSON.parse(options.body), old = drafts.get(path);
+    if (old) assert.deepEqual(body, old, 'same draft id retries frozen content'); else drafts.set(path, body);
+    if (loseDraft) { loseDraft = false; throw new Error('响应丢失'); }
+    response = Response.json({ ...body, id: 100, clubId: business.managedClubId, status: 'DRAFT' });
+  } else if (path.startsWith('/api/favorites/')) response = Response.json({ clubId: 10 });
+  else if (path === '/api/activities' || path.endsWith('/activities') || path === '/api/registrations/mine') response = Response.json([]);
+  else if (path.startsWith('/api/notifications?')) response = Response.json({ items: [], unread: 0, total: 0, page: 0, hasMore: false });
+  else if (path === '/api/manage/activities/100' || path === '/api/manage/activities/100/cancel') response = Response.json({ id: 100 });
+  else throw new Error(`Unexpected ${method} ${path}`);
+  if (delayed?.path === path) { const wait = delayed.wait; delayed = undefined; await wait; }
+  return response;
+};
+const server = await createServer({ configFile: false, plugins: [(await import('@vitejs/plugin-vue')).default()], server: { middlewareMode: true }, appType: 'custom' });
+try {
+  ({ business } = await server.ssrLoadModule('/src/prototype/business.ts'));
+  const chat = await server.ssrLoadModule('/src/community/chat.ts');
+  const plans = await server.ssrLoadModule('/src/community/planning.ts');
+  const favorites = await server.ssrLoadModule('/src/community/favorites.ts');
+  const activities = await server.ssrLoadModule('/src/community/activities.ts');
+  business.clubs = [{ id: 'photo', backendId: 10, name: '光影摄影社' }, { id: 'code', backendId: 20, name: '程序设计社' }];
+  assert.equal(await chat.sendQuestion('摄影', 'assistant'), false);
+  await chat.loadSessions(); assert.equal(await plans.generatePlan('活动'), null); assert.equal(calls.length, 0);
+  business.user = student;
+  await chat.sendQuestion('摄影', 'assistant');
+  assert.equal(chat.chatState.conversationId, id); assert.equal(chat.chatState.turns[0].steps[0].tool, 'search_clubs');
+  assert.equal(selection.get('campus-conversation-v2:1'), id);
+  assert(!JSON.parse(calls.find(c => c.path === '/api/ai/assistant').body).userId, 'identity is never sent in browser JSON');
+  business.favoriteIds = [];
+  await favorites.toggleClubFavorite('photo'); assert.deepEqual([...business.favoriteIds], [10]);
+  await favorites.toggleClubFavorite('photo'); assert.deepEqual([...business.favoriteIds], []);
+  let release; delayed = { path: '/api/ai/chat', wait: new Promise(resolve => release = resolve) };
+  const late = chat.sendQuestion('旧账号问题', 'chat'); await new Promise(resolve => setTimeout(resolve, 0));
+  business.user = manager; business.managedClubId = 10;
+  assert.equal(chat.chatState.turns.length, 0, 'account switch synchronously clears chat');
+  release(); assert.equal(await late, false); assert.equal(chat.chatState.conversationId, '');
+  const proposal = await plans.generatePlan('新手交流'); assert(proposal);
+  assert(!calls.some(c => c.path.includes('/drafts/')), 'generation never writes formal activities');
+  const body = { title: proposal.title, description: proposal.description, location: '学生中心204', startTime: '2099-10-20T16:00', registrationDeadline: '2099-10-19T16:00', capacity: 20 };
+  assert(plans.preparePlanDraft(body)); body.title = '外部对象后改动';
+  loseDraft = true; assert.equal(await plans.confirmPlanDraft(), false);
+  assert.equal(plans.planningState.pending.body.title, proposal.title); assert(plans.planningState.error.includes('编号和内容已保留'));
+  assert.equal(await plans.generatePlan('不应覆盖未确认请求'), null);
+  assert(await plans.confirmPlanDraft()); assert.equal(drafts.size, 1);
+  assert.equal(plans.planningState.pending, null); assert(plans.planningState.notice.includes('尚未发布'));
+  assert(!calls.some(c => c.path.endsWith('/publish')), 'human confirmation saves draft only');
+  delayed = { path: '/api/ai/plans', wait: new Promise(resolve => release = resolve) };
+  const oldClub = plans.generatePlan('社团10需求'); await new Promise(resolve => setTimeout(resolve, 0));
+  business.managedClubId = 20; release(); assert.equal(await oldClub, null); assert.equal(plans.planningState.proposal, null);
+  await activities.editActivity(100, { ...body, title: '修改活动' });
+  await activities.cancelManagedActivity(100, '天气原因');
+  assert(calls.some(c => c.path === '/api/manage/activities/100' && c.method === 'PUT'));
+  assert(calls.some(c => c.path.endsWith('/100/cancel') && JSON.parse(c.body).reason === '天气原因'));
+  const router = (await server.ssrLoadModule('/src/router.ts')).default;
+  const App = (await server.ssrLoadModule('/src/App.vue')).default;
+  await router.push('/assistant'); await router.isReady();
+  let html = await renderToString(createSSRApp(App).use(router)); assert(html.includes('只归当前账号') || html.includes('只读工具'));
+  await router.push('/manage/activities'); html = await renderToString(createSSRApp(App).use(router));
+  assert(html.includes('活动策划参考') && html.includes('不直接保存或发布'));
+  business.user = null; assert.equal(chat.chatState.turns.length, 0); assert.equal(plans.planningState.proposal, null);
+  console.log('PASS AI workflows: CSRF, conversation/account fencing, account favorites, read-only UI, generation without writes, human-confirmed frozen/idempotent retries, activity edit/cancel and late club isolation. Mock HTTP + SSR, not a real model or browser.');
+} finally { await server.close(); }

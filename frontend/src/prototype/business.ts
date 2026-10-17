@@ -15,7 +15,7 @@ interface ApiMember { id: number; clubId: number; userId: number; name: string; 
 export interface Member { id: string; clubId: string; name: string; major: string; role: string; date: string }
 export const business = reactive({
   loading: false, saving: false, ready: false, error: '', demoAccounts: false,
-  user: null as User | null, profile: null as Profile | null, clubs: [] as Club[], applications: [] as Application[],
+  user: null as User | null, profile: null as Profile | null, clubs: [] as Club[], favoriteIds: [] as number[], applications: [] as Application[],
   memberships: [] as Member[], managedApplications: [] as Application[], managedMembers: [] as Member[], managedClubId: null as number | null
 });
 export const clubCatalog = computed(() => businessMode ? business.clubs : demoClubs);
@@ -23,6 +23,7 @@ export const managedClubs = computed(() => business.clubs.filter(c => business.u
 let generation = 0;
 function clearPrivateRecords() {
   business.profile = null;
+  business.favoriteIds = [];
   business.applications = []; business.memberships = []; business.managedApplications = []; business.managedMembers = [];
 }
 function clubKey(id: number) { return business.clubs.find(c => c.backendId === id)?.id ?? String(id); }
@@ -55,16 +56,17 @@ export async function refreshBusiness(): Promise<void> {
     const allowed = session.user.managedClubIds;
     if (business.managedClubId === null || !allowed.includes(business.managedClubId)) business.managedClubId = allowed[0] ?? null;
     const clubId = business.managedClubId;
-    const [applications, memberships, managedApplications, managedMembers, profile] = await Promise.all([
+    const [applications, memberships, managedApplications, managedMembers, profile, favorites] = await Promise.all([
       request<ApiApplication[]>('/recruitment/my-applications'), request<ApiMember[]>('/memberships/mine'),
       clubId === null ? Promise.resolve([]) : request<ApiApplication[]>(`/manage/clubs/${clubId}/applications`),
       clubId === null ? Promise.resolve([]) : request<ApiMember[]>(`/manage/clubs/${clubId}/members`),
-      request<Profile>('/profile')
+      request<Profile>('/profile'), request<{ clubId: number }[]>('/favorites')
     ]);
     if (ticket !== generation) return;
     business.applications = applications.map(application); business.memberships = memberships.map(member);
     business.managedApplications = managedApplications.map(application); business.managedMembers = managedMembers.map(member);
     business.profile = profile;
+    business.favoriteIds = favorites.map(item => item.clubId);
     business.ready = true;
   } catch (error) {
     if (ticket === generation) { business.error = errorMessage(error); clearPrivateRecords(); }

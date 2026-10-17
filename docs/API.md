@@ -29,7 +29,8 @@
 | GET | `/api/activities` | 仅已发布活动及实时有效报名人数；匿名可读，草稿和 SAMPLE 不公开 |
 | GET | `/api/activities/{id}` | 已发布或曾发布后取消的活动详情；未发布或不存在返回 404 |
 | GET | `/api/manage/clubs/{clubId}/activities` | 负责人查看本社团草稿、已发布及已取消活动（不含 SAMPLE） |
-| POST | `/api/manage/clubs/{clubId}/activities` | 保存活动草稿，校验本社团权限、必填项及时间 |
+| POST | `/api/manage/clubs/{clubId}/activities` | 手动保存活动草稿，校验本社团权限、必填项及时间 |
+| PUT | `/api/manage/clubs/{clubId}/drafts/{requestId}` | 人工确认保存草稿；UUID+相同内容幂等，不自动发布 |
 | POST | `/api/manage/activities/{id}/publish` | 仅本社团负责人确认发布草稿；重复发布返回 409 |
 | PUT | `/api/manage/activities/{id}` | 编辑未开始的草稿/已发布活动，输入与草稿相同；有人报名后不可改时间/地点 |
 | POST | `/api/manage/activities/{id}/cancel` | 负责人取消未开始、无人签到的活动；保留记录、同步取消有效报名并通知报名者 |
@@ -50,11 +51,14 @@
 | POST | `/api/notifications/{id}/read` | 本人消息标为已读，重复操作保留原 readAt；他人或不存在消息统一 404 |
 | POST | `/api/notifications/read-all` | 当前账号全部未读消息标为已读，返回 changed 数量；不影响其他账号 |
 | GET | `/api/ai/status` | AI 模式、资料数、会话存储模式 |
-| GET | `/api/ai/knowledge` | 已上传资料列表 |
-| GET | `/api/ai/knowledge/{id}` | 资料元数据与全文 |
-| POST | `/api/ai/knowledge` | multipart 字段 `file` 上传公开文本 |
+| GET | `/api/ai/knowledge` | 登录账号可见的 PUBLIC 与所属社团 CLUB 资料 |
+| GET | `/api/ai/knowledge/{id}` | 当前可见资料的元数据与全文，不可见返回 404 |
+| POST | `/api/ai/knowledge` | multipart `file`、`visibility`、可选 `clubId`；公开资料限平台管理员，社团资料限所属负责人 |
 | POST | `/api/ai/chat` | 资料问答，保存回答与引用 |
-| GET | `/api/ai/conversations/{id}` | 会话历史与引用 |
+| POST | `/api/ai/assistant` | 登录账号的受限只读工具查询；模型最多调用 3 次工具 |
+| POST | `/api/ai/plans` | 所属负责人输入 clubId/requirement，仅生成策划文案，不保存活动 |
+| GET | `/api/ai/conversations` | 当前账号最近 50 个会话编号 |
+| GET | `/api/ai/conversations/{id}` | 本人会话历史、引用与工具观察，并重新检查引用权限 |
 
 问答请求：
 
@@ -74,7 +78,7 @@
 
 站内通知由审核通过/拒绝、报名成功、取消成功自动产生，不提供客户端创建通知接口。业务与通知在同一事务中写入；重复/失败请求不产生通知，取消后重新报名是新事件。通知保存发生时的正文和时间，查看相关记录时显示当前业务状态。不补造接入前历史通知，不代表微信推送或实时消息。读取与已读操作只从 Session 获取账号身份。
 
-错误采用 HTTP 状态码及 `detail` 文本。AI 服务不可用时返回 503，校园注册、社团、招新、活动、签到、经费、收藏与通知业务不调用 AI。AI 开发接口目前仍为公开测试资料，仅限本地环境；新增业务权限不代表 AI 数据权限已经完成。
+错误采用 HTTP 状态码及 `detail` 文本。AI 不可用时返回 503，校园基础业务不调用 AI。除状态查询外，AI 浏览器接口均需登录，写入需 CSRF；内部接口还需服务间密钥。详见 `AI-ASSISTANT-WORKFLOW.md`，不得将前端传入的角色或 userId 当成授权身份。
 
 ## 本轮新增请求与字段
 
@@ -92,4 +96,4 @@
 
 经费只汇总 ACTIVE 支出，VOID 记录仍完整返回但不计入合计。未设置预算时 budget/remaining 为 null，overBudget=false（表示没有可比较预算，不是预算足够）；设置预算后 remaining=budget-spent，允许负数并标记 overBudget=true。取消活动仍保留预算和支出，可记录实际已发生费用；SAMPLE 占位活动不能记账。财务与签到码接口不对学生或其他社团负责人开放。
 
-所有新增功能本轮仅提供后端 API，对应前端页面尚未接入。
+本轮活动编辑/取消、账号收藏、资料权限、本人问答与历史、只读助手、策划与人工确认已有页面。学校级账号管理和任意角色维护仍不包含在当前界面中。

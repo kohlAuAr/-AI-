@@ -31,7 +31,7 @@ onMounted(load);
   <p v-if="campusError" class="error" role="alert">校园服务：{{ campusError }}</p>
   <p v-if="aiError" class="error" role="alert">智能服务：{{ aiError }}</p>
   <section class="panel"><div class="section-heading"><h2>校园业务入口</h2><RouterLink to="/roadmap" class="text-link">查看后续开发 →</RouterLink></div>
-    <div class="flow-grid"><article><span class="flow-index">招新</span><h3>发现社团 → 申请 → 审核 → 入社</h3><p>学生提交申请，负责人审核，审核通过后建立成员关系。当前流程已接通数据库。</p></article><article><span class="flow-index">活动</span><h3>编辑草稿 → 发布 → 报名 → 名单</h3><p>负责人保存草稿并确认发布，学生报名，负责人查看名单。当前页面不包含 AI 自动生成草稿。</p></article></div>
+    <div class="flow-grid"><article><span class="flow-index">招新</span><h3>发现社团 → 申请 → 审核 → 入社</h3><p>学生提交申请，负责人审核，审核通过后建立成员关系。当前流程已接通数据库。</p></article><article><span class="flow-index">活动</span><h3>编辑草稿 → 发布 → 报名 → 签到</h3><p>可直接填写，也可生成策划参考后修改、人工确认保存；发布仍单独确认。负责人查看名单与签到记录。</p></article></div>
   </section>
   <section class="panel"><div class="section-heading"><h2>当前模块</h2><span class="muted">真实状态，不代表全部功能已完成</span></div>
     <div v-if="system" class="module-list"><article v-for="module in system.modules" :key="module.key"><div><h3>{{ module.name }}</h3><p>{{ module.description }}</p></div><span class="badge" :class="module.status === 'READY' ? 'ready' : 'neutral'">{{ module.status === 'READY' ? '已实现基础链路' : module.status === 'SAMPLE' ? '示例只读' : '待实现' }}</span></article></div>
