@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'vite';
 import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 const selection = new Map();

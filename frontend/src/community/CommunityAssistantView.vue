@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { business, businessMode, clubCatalog } from '../prototype/business';
 import { state } from '../prototype/store';
 import { publicPreview } from '../prototype/public';
@@ -9,13 +9,14 @@ import CommunityConversation from './CommunityConversation.vue';
 const interests = computed(() => businessMode ? (business.profile?.id === business.user?.id ? business.profile?.interests ?? [] : []) : state.profile.interests);
 const recommended = computed(() => clubCatalog.value.filter(c => c.recruiting && c.tags.some(t => interests.value.includes(t))).slice(0, 3));
 const interestDescription = computed(() => business.profile?.id === business.user?.id ? business.profile?.interestDescription || '' : '');
+const panel = ref<'chat' | 'recommendations'>('chat');
 </script>
 <template>
   <div class="community-directory community-assistant-page">
     <div class="community-page-title"><h1>助手</h1><RouterLink to="/guide">使用说明<CommunityIcon name="chevron" /></RouterLink></div>
-    <div class="community-assistant-intro"><span><CommunityIcon name="assistant" /></span><div><h2>需要了解什么？</h2><p>从招新条件、社团资料和你的兴趣开始。</p></div></div>
-    <CommunityConversation v-if="businessMode" />
-    <section v-if="businessMode" class="community-assistant-section" aria-labelledby="assistant-semantic-title" :aria-busy="recommendationState.loading">
+    <nav v-if="businessMode" class="paismart-assistant-tabs" aria-label="助手功能"><button :aria-pressed="panel === 'chat'" :class="{ selected: panel === 'chat' }" @click="panel = 'chat'">社团问答</button><button :aria-pressed="panel === 'recommendations'" :class="{ selected: panel === 'recommendations' }" @click="panel = 'recommendations'">兴趣推荐</button><RouterLink to="/system/knowledge">资料知识库</RouterLink></nav>
+    <CommunityConversation v-if="businessMode && panel === 'chat'" />
+    <section v-if="businessMode" v-show="panel === 'recommendations'" class="community-assistant-section" aria-labelledby="assistant-semantic-title" :aria-busy="recommendationState.loading">
       <div class="community-section-heading"><h2 id="assistant-semantic-title">适合你的社团</h2><RouterLink to="/me">编辑兴趣<CommunityIcon name="chevron" /></RouterLink></div>
       <p v-if="!business.user" class="community-section-description">登录并填写兴趣描述后，可以获取社团推荐。<RouterLink to="/login" class="community-text-link">前往登录</RouterLink></p>
       <template v-else>
@@ -37,13 +38,13 @@ const interestDescription = computed(() => business.profile?.id === business.use
       <RouterLink v-for="club in recommended" :key="club.id" :to="`/clubs/${club.id}`" class="community-interest-row"><span class="community-small-cover" :class="`cover-${club.id}`"><CommunityIcon :name="club.id" /></span><div><h3>{{ club.name }}</h3><p>共同兴趣：{{ club.tags.filter(t => interests.includes(t)).join('、') }}</p></div><CommunityIcon name="chevron" /></RouterLink>
       <p v-if="!recommended.length" class="community-section-description">暂无匹配的招新社团，可以先浏览全部社团。</p>
     </section>
-    <section class="community-assistant-section" aria-labelledby="assistant-knowledge-title">
+    <section v-if="!businessMode" class="community-assistant-section" aria-labelledby="assistant-knowledge-title">
       <div class="community-section-heading"><h2 id="assistant-knowledge-title">社团资料问答</h2></div>
       <p class="community-section-description">{{ publicPreview ? '纯前端预览暂不开放问答。先查看社团介绍与招新条件。' : '从已上传资料中检索依据，启用模型后整理回答。可以展开原文核对，具体模式见问答页面。' }}</p>
       <template v-if="!publicPreview"><RouterLink to="/system/chat" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="assistant" /></span><div><strong>打开资料问答</strong><p>从当前可见资料中寻找依据</p></div><CommunityIcon name="chevron" /></RouterLink><RouterLink to="/system/knowledge" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="read" /></span><div><strong>资料知识库</strong><p>公开资料与所属社团资料</p></div><CommunityIcon name="chevron" /></RouterLink></template>
       <RouterLink v-else to="/clubs?recruiting=true" class="community-feature-link"><span class="community-feature-icon"><CommunityIcon name="join" /></span><div><strong>查看招新条件</strong><p>先了解，再申请</p></div><CommunityIcon name="chevron" /></RouterLink>
     </section>
-    <section class="community-assistant-boundary"><h2>哪些事情仍由你决定？</h2><p>助手可查询社团、活动、本人报名记录与可见资料，不自动申请、报名或发布。负责人可在活动管理中生成策划参考，修改后人工确认保存草稿，再单独发布；推荐只提供参考。</p></section>
+    <p v-if="businessMode && business.user?.role === 'MANAGER'" class="community-section-description">需要策划活动？前往<RouterLink to="/manage/activities">活动管理</RouterLink>生成参考并人工确认草稿。</p>
     <p class="community-list-disclosure">虚构测试资料 · {{ publicPreview ? '纯前端原型，非真实报名' : '问答需要校园服务与 AI 服务运行' }}</p>
   </div>
 </template>

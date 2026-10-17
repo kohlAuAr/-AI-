@@ -1,0 +1,136 @@
+/* PaiSmart theme + Naive UI campus adaptation. See THIRD-PARTY-NOTICES.md. */
+html { background: #f7fafc; }
+.paismart-shell { font-family: v-sans, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f1f1f; }
+.paismart-shell * { box-sizing: border-box; }
+.paismart-shell a { text-decoration: none; }
+.paismart-shell :is(a, button, summary, input, textarea, select):focus-visible { outline: 2px solid #646cff; outline-offset: 3px; }
+.paismart-skip-link { position: fixed; left: 16px; top: -100px; z-index: 200; background: #fff; color: #5057d9; padding: 12px; }
+.paismart-skip-link:focus { top: 8px; }
+.paismart-logo { height: 76px; padding: 0 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; color: #1f1f1f; white-space: nowrap; }
+.paismart-logo > span { display: grid; place-items: center; color: #646cff; }
+.paismart-logo .community-icon { width: 30px; height: 30px; }
+.paismart-logo strong { font-size: 20px; font-weight: 650; }
+.paismart-logo strong span { display: block; font-size: 10px; font-weight: 400; color: #858b99; margin-top: 2px; }
+.paismart-nav { flex: 1; min-height: 0; overflow-y: auto; padding-inline: 8px; }
+.paismart-nav .n-menu-item-content { padding-left: 16px !important; }
+.sider-collapsed .paismart-nav { padding-inline: 0; }
+.paismart-sider-bottom { padding: 12px 8px; border-top: 1px solid #f1f2f5; text-align: center; }
+.paismart-sider-bottom > a { display: block; font-size: 12px; color: #777d8a; padding: 12px 0 4px; }
+.paismart-breadcrumb { display: flex; align-items: center; gap: 14px; font-size: 13px; min-width: 0; color: #858b99; }
+.paismart-breadcrumb strong { color: #333846; font-weight: 500; white-space: nowrap; }
+.paismart-header-actions { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.paismart-header-login { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 6px 16px; border-radius: 6px; color: #fff; background: #646cff; font-size: 13px; }
+.paismart-header-login:hover { background: #8288ff; }
+.paismart-header-bell { position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; color: #626979; }
+.paismart-header-bell > span { position: absolute; right: -4px; top: -2px; border-radius: 12px; background: #e34d59; color: #fff; font-size: 10px; padding: 0 5px; }
+.paismart-account { display: flex; align-items: center; gap: 9px; color: #444b5b; font-size: 13px; max-width: 180px; }
+.paismart-account > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.paismart-campus.community-app { --community-green: #555cd6; --community-bg: #f7fafc; --community-white: #fff; --community-text: #262b38; --community-muted: #727988; --community-line: #efeff5; min-height: 0; background: transparent; font-family: inherit; font-size: 14px; }
+.paismart-campus :is(.community-directory, .community-secondary-page, .community-system) { border-radius: 12px; border: 0; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 3%); }
+.paismart-campus .community-directory, .paismart-campus .community-secondary-page { padding: 24px; }
+.paismart-campus .community-page-title { padding: 0; min-height: 34px; margin: 0 0 12px; }
+.paismart-campus .community-page-title h1 { font-size: 22px; font-weight: 600; }
+.paismart-campus .community-page-title > a { font-size: 13px; color: #7a8191; }
+.paismart-campus .community-page-intro { padding: 0; margin: 0 0 22px; color: #727988; font-size: 14px; }
+.paismart-campus .community-search { margin: 12px 0; padding: 0 12px; min-height: 40px; background: white; border: 1px solid #e0e2ea; border-radius: 6px; }
+.paismart-campus .community-category-tabs { padding-inline: 0; gap: 20px; justify-content: flex-start; overflow-x: auto; }
+.paismart-campus .community-category-tabs button { min-height: 44px; font-size: 13px; }
+.paismart-campus .community-list-heading { padding: 20px 0 0; }
+.paismart-campus .community-club-row { margin-inline: 0; padding: 22px 0; }
+.paismart-campus .community-club-cover { width: 60px; height: 60px; border-radius: 12px; }
+.paismart-campus .community-club-title h3 { font-size: 16px; }
+.paismart-campus .community-club-description { color: #737987 !important; font-size: 13px; }
+.paismart-campus .community-recruiting { color: #18a058; background: #edf8f1; border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+.paismart-campus .community-recruiting.ended { background: #f4f4f6; color: #8b909c; }
+.paismart-campus .community-save.saved { color: #646cff !important; }
+.paismart-campus .community-save.saved svg { fill: #efefff; }
+.paismart-campus :is(.community-section-heading, .community-section-description, .community-list-disclosure, .community-assistant-boundary) { padding-inline: 0; }
+.paismart-campus .community-section-heading h2 { font-size: 17px; font-weight: 600; }
+.paismart-campus .community-button, .paismart-campus :is(.p-button, .button) { border-radius: 7px; min-height: 38px; padding: 8px 18px; font-size: 13px; }
+.paismart-campus :is(.community-event-form, .community-profile-form, .p-form, .community-form-fields) :is(input, textarea, select) { border: 1px solid #dedfe6; border-radius: 6px; padding: 10px 12px; background: #fff; min-height: 40px; box-shadow: none; }
+.paismart-campus :is(.p-panel, .panel) { padding: 22px 0; border-top-color: #efeff5; }
+.paismart-campus :is(.p-panel, .panel) h2 { font-size: 16px; }
+.paismart-campus .community-workspace-nav { border: 0; box-shadow: 0 1px 3px rgb(15 23 42 / 3%); border-radius: 10px; gap: 24px; padding: 4px 24px; }
+.paismart-campus .community-managed-event { padding: 22px 0; margin-inline: 0; }
+.paismart-campus .community-message-row { margin-inline: 0; }
+.paismart-campus .community-message-symbol { border-radius: 10px; color: #646cff; background: #efefff; }
+.paismart-campus .community-message-toolbar, .paismart-campus .community-message-pagination { padding-inline: 0; }
+.paismart-campus .community-page-footer { min-height: 52px; padding-inline: 4px; font-size: 11px; }
+.paismart-campus .community-profile-avatar { background: #efefff; color: #646cff; }
+.paismart-assistant-tabs { display: flex; align-items: center; gap: 8px; padding-bottom: 20px; }
+.paismart-assistant-tabs > button { min-height: 36px; padding: 8px 16px; border-radius: 7px; font-size: 13px; color: #8a90a0; }
+.paismart-assistant-tabs > button.selected { color: #555cd6; background: #efefff; }
+.paismart-assistant-tabs > a { margin-left: auto; font-size: 12px; color: #8a90a0; }
+.paismart-chat-page .community-assistant-page { background: transparent; box-shadow: none; padding: 0; }
+.paismart-campus table { font-size: 13px; }
+.paismart-campus th { background: #fafafc; font-weight: 500; }
+.paismart-campus :is(th, td) { border-bottom: 1px solid #efeff5; padding: 14px 12px; }
+.paismart-campus .community-banner-section { margin: 0 0 24px; }
+.paismart-campus .community-banner-slide { border-radius: 12px; }
+.paismart-campus .community-banner-slide > img { aspect-ratio: 2.65; }
+.paismart-campus .community-banner-caption { max-width: 48%; padding: 12px 16px; background: #ffffffee; border-radius: 8px; }
+.paismart-campus .community-banner-caption h2 { font-size: 23px; }
+.paismart-campus .community-banner-caption > span, .paismart-campus .community-banner-action { color: #555cd6; }
+.paismart-mobile-nav.community-bottom-nav { display: none; }
+.paismart-home-columns { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, 1fr); gap: 24px; }
+.paismart-home-panel { padding: 24px; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 3%); min-width: 0; }
+.paismart-home-panel .community-section-heading { padding: 0; margin-bottom: 22px; }
+.paismart-home-clubs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.paismart-home-club { display: block; min-width: 0; border: 1px solid #efeff5; border-radius: 9px; padding: 18px; transition: border-color .15s ease; }
+.paismart-home-club:hover { border-color: #b4b8ff; }
+.paismart-home-club-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.paismart-home-club-header > div { flex: 1; min-width: 0; }
+.paismart-home-club-header h3 { font-size: 15px; font-weight: 550; }
+.paismart-home-club-header small { display: block; margin-top: 4px; font-size: 11px; color: #9298a5; }
+.paismart-home-club > p { color: #777e8b; line-height: 1.8; font-size: 13px; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 46px; }
+.paismart-home-club > span { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #646cff; }
+.paismart-home-club .community-club-cover { width: 42px; height: 42px; border-radius: 9px; }
+.paismart-home-club .community-club-cover svg { width: 24px; height: 24px; }
+.paismart-home-event { display: flex; gap: 14px; padding: 18px 0; border-bottom: 1px solid #efeff5; align-items: flex-start; }
+.paismart-home-event:first-of-type { padding-top: 0; }
+.paismart-home-event:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.paismart-event-date { flex-shrink: 0; min-width: 48px; padding: 7px; border-radius: 8px; text-align: center; background: #f4f4ff; color: #646cff; font-size: 12px; }
+.paismart-event-date strong { display: block; font-size: 21px; font-weight: 600; line-height: 1.2; }
+.paismart-home-event h3 { font-size: 14px; font-weight: 550; margin-bottom: 7px; }
+.paismart-home-event p { font-size: 12px; line-height: 1.7; color: #8b91a0; }
+.paismart-home-event small { color: #18a058; font-size: 11px; }
+.paismart-home-discover.community-directory { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.paismart-home-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 4px 0 22px; }
+.paismart-home-header h1 { font-size: 24px; font-weight: 600; margin: 0 0 6px; }
+.paismart-home-header p { font-size: 13px; color: #8b91a0; }
+.paismart-home-header > a { font-size: 13px; color: #646cff; padding: 8px 12px; border-radius: 6px; background: #edeeff; white-space: nowrap; }
+.paismart-auth-page .paismart-route-content { min-height: calc(100dvh - 160px); display: grid; place-items: center; padding: 24px 0; }
+.paismart-login-wrap { width: min(480px, 100%); margin: auto; }
+.paismart-login-wrap .n-card { border-radius: 14px; box-shadow: 0 6px 32px rgb(29 35 41 / 5%); }
+.paismart-login-header { display: flex; align-items: center; gap: 12px; padding: 8px 0 24px; }
+.paismart-login-header > .community-icon { width: 44px; height: 44px; color: #646cff; }
+.paismart-login-header h1 { font-size: 24px; font-weight: 600; }
+.paismart-login-header p { font-size: 12px; color: #959ba8; margin-top: 5px; }
+.paismart-login-wrap .community-account-tabs { padding: 0; margin-bottom: 18px; }
+.paismart-login-wrap .p-form { max-width: none; gap: 18px; }
+.paismart-login-wrap .p-form > button { width: 100%; min-height: 42px; }
+.paismart-login-wrap .community-form-fields { gap: 16px; }
+.paismart-login-wrap .community-login-intro { font-size: 12px; margin: 0 0 18px; }
+.paismart-login-wrap .community-demo-accounts { margin-top: 22px; padding: 12px; border: 1px dashed #e3e4ed; border-radius: 6px; }
+.paismart-login-wrap .p-top-gap { margin-top: 18px; }
+.paismart-shell .community-toast { z-index: 2100; background: #fff; border: 1px solid #e8e9ef; color: #343a47; box-shadow: 0 6px 28px rgb(15 23 42 / 12%); border-radius: 8px; }
+@media (max-width: 1150px) { .paismart-home-columns { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .paismart-breadcrumb > span { display: none; } .paismart-breadcrumb strong { font-size: 16px; } .paismart-header-actions { gap: 8px; } .paismart-account > span:last-child { display: none; }
+  .paismart-mobile-nav.community-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 35; height: calc(64px + env(safe-area-inset-bottom)); padding: 4px 8px env(safe-area-inset-bottom); border-top: 1px solid #eeeef4; background: #fff; }
+  .paismart-mobile-nav a { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 11px; color: #8a90a0; }
+  .paismart-mobile-nav a.current { color: #646cff; } .paismart-mobile-nav a.current svg { stroke-width: 2.2; }
+  .paismart-campus .community-directory, .paismart-home-panel, .paismart-campus .community-secondary-page { padding: 18px 16px; border-radius: 10px; }
+  .paismart-chat-page .community-assistant-page { padding: 0; }
+  .paismart-home-header { margin: 0 4px 18px; } .paismart-home-header h1 { font-size: 22px; } .paismart-home-header > a { padding: 8px; font-size: 12px; }
+  .paismart-home-discover.community-directory { padding: 0; } .paismart-home-clubs { grid-template-columns: minmax(0, 1fr); }
+  .paismart-home-club { padding: 16px; } .paismart-home-club > p { min-height: 0; }
+  .paismart-campus .community-banner-slide > img { aspect-ratio: 1.7; }
+  .paismart-campus .community-banner-caption { left: 12px; top: 14px; max-width: 64%; padding: 8px 10px; } .paismart-campus .community-banner-caption h2 { font-size: 18px; }
+  .paismart-campus .community-workspace-nav { gap: 18px; padding: 4px 16px; flex-wrap: nowrap; overflow-x: auto; } .paismart-campus .community-workspace-nav a { white-space: nowrap; }
+  .paismart-campus .community-page-title h1 { font-size: 21px; } .paismart-campus .community-category-tabs { gap: 18px; }
+  .paismart-campus .community-club-row { gap: 0; } .paismart-campus .community-club-cover { width: 50px; height: 50px; } .paismart-campus .community-club-link { gap: 12px; }
+  .paismart-campus :is(input, textarea, select) { font-size: 16px; }
+  .paismart-auth-page .paismart-route-content { min-height: 0; padding: 0; } .paismart-login-wrap .n-card > .n-card__content { padding: 24px 18px; } .paismart-login-header h1 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .paismart-shell *, .paismart-shell *::before, .paismart-shell *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }

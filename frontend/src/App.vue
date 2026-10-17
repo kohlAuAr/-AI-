@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import CommunityShell from './community/CommunityShell.vue';
+import PaiSmartShell from './paismart/PaiSmartShell.vue';
 </script>
 
 <template>
-  <CommunityShell />
+  <PaiSmartShell />
 </template>

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -132,7 +132,7 @@ try {
   assert((await page('/manage/recruitment')).includes('查看并审核'));
   for (const path of ['/manage', '/manage/recruitment', '/manage/members', '/manage/finance']) {
     const html = await page(path);
-    assert(html.includes('community-secondary-page') && html.includes('负责人导航'));
+    assert(html.includes('paismart-layout') && html.includes('负责人导航'), 'manager destinations use the reused PaiSmart layout and retain scoped navigation');
     assert(!html.includes('CLUB WORKSPACE') && !html.includes('每一份热爱'));
   }
   await client.reviewApplication('20', true, '欢迎');

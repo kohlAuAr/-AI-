@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };

@@ -10,7 +10,7 @@ Git 历史于 2026-10-08 根据先前开发记录分阶段重建，不是当时�
 
 注册与个人资料链已接入前端：`/login` 注册学生账号后登录，在 `/me` 编辑资料、自由兴趣描述和空闲时间，保存到当前账号数据库。`/assistant` 综合社团名称、类别、简介、标签，以 Embedding + BM25 + RRF 排名；特定验收社团退出推荐但保留业务记录。未配置模型时明确提示不可用，不显示模拟推荐，资料保存不调用 AI。见 [兴趣推荐说明](docs/INTEREST-RECOMMENDATION.md)。活动编辑/取消、账号收藏、社团维护、签到和经费台账页面均已接通；只有纯原型仍使用浏览器本地收藏。范围与请求说明见 [校园后端业务说明](docs/CAMPUS-BACKEND-WORKFLOW.md) 和 [账号与个人资料](docs/ACCOUNT-PROFILE-WORKFLOW.md)。
 
-前端沿用用户认可的白底绿色社群风格，包括登录、详情、消息、负责人栏目及 `/system` 联调页。表单和确认弹窗复用已有风格，保留原型归档。早期视觉统一的阶段记录见 [界面验证记录](docs/COMMUNITY-UI-VERIFICATION.md)，当前功能状态以本轮验收为准。
+前端按 2026-10-18 的新要求，改造复用本地 PaiSmart 的 Vue3 + Naive UI 布局、主题、登录卡片、会话列表和聊天输入区。桌面采用可收起侧栏与顶部账号区，手机保留五项底部导航及抽屉；校园业务页面适配同一主题，原有接口、权限和确认流程不变。改造范围、来源和验证见 [PaiSmart 前端适配](docs/PAISMART-FRONTEND-ADAPTATION.md)，旧原型归档不变。早期 [界面验证记录](docs/COMMUNITY-UI-VERIFICATION.md) 是历史记录，不代表当前视觉方向。
 
 首页内容管理已接通：新增 `PLATFORM_ADMIN` 角色，管理 PNG/JPG 海报上传、站内关联内容、顺序、展示时间及确认上下架；发现页显示数据库轮播，支持自动/手动切换和暂停。管理员不继承社团负责人权限。demo 账号 `platform_admin`，密码 `CampusDemo123!`，登录后进入 `/platform/banners`；手机也可从“我的”进入。仅 demo 配置创建三个虚构示例海报，纯前端原型不调用管理接口，旧原型归档不变。见 [首页内容管理说明与验收](docs/PLATFORM-BANNERS.md)。
 
@@ -28,7 +28,7 @@ Git 历史于 2026-10-08 根据先前开发记录分阶段重建，不是当时�
 
 ## 先看产品原型（支持手机浏览器）
 
-第二条数据库业务也已接通：负责人保存活动草稿 → 确认发布 → 学生报名/取消 → 负责人查看名单。打开 `http://127.0.0.1:5178/activities`，负责人入口 `/manage/activities`；账号沿用上述 demo 账号。面向全校学生，地点直接填文字，不包含场地预约或经费审批。签到页面已接入：负责人开启/关闭现场码，学生输入签到码，名单与“我的报名”显示签到时间。见 [签到链说明](docs/CHECK-IN-WORKFLOW.md)。界面延续用户确认的白底社群列表风格。使用与代码链见 [活动业务说明](docs/ACTIVITY-WORKFLOW.md)，实际验收见 [活动验证](docs/ACTIVITY-VERIFICATION.md)。
+第二条数据库业务也已接通：负责人保存活动草稿 → 确认发布 → 学生报名/取消 → 负责人查看名单。打开 `http://127.0.0.1:5178/activities`，负责人入口 `/manage/activities`；账号沿用上述 demo 账号。面向全校学生，地点直接填文字，不包含场地预约或经费审批。签到页面已接入：负责人开启/关闭现场码，学生输入签到码，名单与“我的报名”显示签到时间。见 [签到链说明](docs/CHECK-IN-WORKFLOW.md)。使用与代码链见 [活动业务说明](docs/ACTIVITY-WORKFLOW.md)，实际验收见 [活动验证](docs/ACTIVITY-VERIFICATION.md)。
 
 第三条通知链：审核结果、报名与取消成功 → 同一事务保存站内通知 → 消息中心查看相关记录、标为已读。打开 `/messages` 或顶部铃铛；没有实时推送，也不补造此前的历史通知。见 [通知业务说明](docs/NOTIFICATION-WORKFLOW.md) 和 [通知验证](docs/NOTIFICATION-VERIFICATION.md)。
 

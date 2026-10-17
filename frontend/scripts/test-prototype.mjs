@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { createSSRApp, nextTick } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 
 const storage = new Map();
 Object.defineProperty(globalThis, 'crypto', { value: {}, configurable: true });
@@ -114,7 +114,7 @@ try {
     if (path === '/activities') check(html.includes('community-search') && html.includes('只看有名额'), 'prototype activity filtering preserved in new list layout');
     if (!router.currentRoute.value.path.startsWith('/system')) check(html.includes('非真实报名'), `${path}: prototype disclosure`);
     if (path === '/assistant') {
-      const mobileNav = html.match(/<nav class="community-bottom-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
+      const mobileNav = html.match(/<nav class="[^"]*\bcommunity-bottom-nav\b[^"]*"[\s\S]*?<\/nav>/)?.[0] ?? '';
       check((mobileNav.match(/<a /g) ?? []).length === 5, 'five mobile navigation items after recruitment merge');
       check(!mobileNav.includes('href="/recruitment"'), 'no separate recruitment destination');
       check(/<a [^>]*href="\/assistant"[^>]*class="[^"]*current[^"]*"/.test(mobileNav), 'assistant navigation is selected');

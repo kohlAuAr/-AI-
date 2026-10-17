@@ -19,10 +19,12 @@
     "preview": "vite preview --host 127.0.0.1 --port 5178 --strictPort"
   },
   "dependencies": {
+    "naive-ui": "2.41.0",
     "vue": "3.5.13",
     "vue-router": "4.5.1"
   },
   "devDependencies": {
+    "@css-render/vue3-ssr": "0.15.14",
     "@types/node": "22.15.17",
     "@vitejs/plugin-vue": "5.2.4",
     "typescript": "5.8.3",

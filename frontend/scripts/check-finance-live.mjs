@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 import { createSessionClient } from '../../scripts/http-session.mjs';
 
 // Runs the actual frontend finance client against the local business service, not browser clicks.

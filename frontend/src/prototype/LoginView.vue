@@ -3,6 +3,8 @@ import { nextTick, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { business, businessMode, login, register } from './business';
 import { errorMessage } from '../api';
+import { NCard } from 'naive-ui';
+import CommunityIcon from '../community/CommunityIcon.vue';
 const router = useRouter();
 const username = ref(''); const password = ref(''); const busy = ref(false); const error = ref('');
 const registering = ref(false), name = ref(''), major = ref(''), confirmation = ref(''), success = ref('');
@@ -30,9 +32,10 @@ async function submit() {
 }
 </script>
 <template>
-  <div class="community-login-page">
-    <div class="p-page-heading"><h1>{{ registering ? '注册学生账号' : '账号登录' }}</h1><p>登录后查看你的社团、申请和活动记录。</p></div>
-    <section v-if="businessMode" class="p-panel">
+  <!-- Card/header adapted from PaiSmart views/_builtin/login/index.vue. Auth logic is campus-owned. -->
+  <div class="community-login-page paismart-login-wrap">
+    <NCard v-if="businessMode" :bordered="false">
+      <header class="paismart-login-header"><CommunityIcon name="planet" /><div><h1>{{ registering ? '注册学生账号' : '账号登录' }}</h1><p>社遇 · 校园社团平台</p></div></header>
       <div class="community-category-tabs community-account-tabs" role="group" aria-label="登录或注册"><button type="button" :aria-pressed="!registering" :class="{ active: !registering }" :disabled="busy" @click="switchMode(false)">登录</button><button type="button" :aria-pressed="registering" :class="{ active: registering }" :disabled="busy" @click="switchMode(true)">注册学生账号</button></div>
       <p class="community-login-intro">{{ registering ? '注册后为学生账号，不能自行获得社团或平台管理权限。' : '学生、社团负责人和平台管理员使用同一个入口，管理权限由账号确定。' }}</p>
       <p v-if="success" role="status" class="success">{{ success }}</p>
@@ -49,7 +52,7 @@ async function submit() {
       </form>
       <details v-if="business.demoAccounts && !registering" class="community-demo-accounts"><summary>查看本地演示账号</summary><dl><dt>学生账号</dt><dd>student / student2</dd><dt>摄影社负责人</dt><dd>photo_manager</dd><dt>程序设计协会负责人</dt><dd>code_manager</dd><dt>平台管理员</dt><dd>platform_admin</dd><dt>演示密码</dt><dd>CampusDemo123!</dd></dl><p>账号与资料均为虚构，仅在 demo 配置下创建。正式部署不得启用公开演示账号。</p></details>
       <p class="p-small p-top-gap">找回密码与学校统一身份认证暂未开放。</p>
-    </section>
+    </NCard>
     <section v-else class="p-panel"><h2>纯前端原型没有登录服务</h2><p>请启动正常开发模式体验真实登录；此模式仍只展示浏览器模拟数据。</p><RouterLink to="/clubs" class="p-button secondary">返回社团列表</RouterLink></section>
   </div>
 </template>

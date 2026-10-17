@@ -1,7 +1,7 @@
 .community-app { --community-text: #242827; --community-muted: #69716e; --community-green: #168169; --community-bg: #f5f6f6; --community-line: #eceeed; --community-white: #fff; min-height: 100vh; background: var(--community-bg); color: var(--community-text); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 15px; }
 .community-app :where(h1, h2, h3, p) { margin: 0; color: inherit; letter-spacing: normal; line-height: 1.5; }
 .community-app :is(a, button, input):focus-visible { outline: 2px solid var(--community-green); outline-offset: 3px; }
-.community-app button { border: 0; background: transparent; color: inherit; padding: 0; }
+.community-app button:not(.n-button) { border: 0; background: transparent; color: inherit; padding: 0; }
 .community-app button:active, .community-app a:active { opacity: .7; }
 .community-icon { width: 22px; height: 22px; flex-shrink: 0; vertical-align: middle; }
 .community-topbar { display: flex; align-items: center; gap: 20px; height: 66px; padding: 0 max(24px, calc((100vw - 1160px) / 2)); border-bottom: 1px solid var(--community-line); background: var(--community-white); }

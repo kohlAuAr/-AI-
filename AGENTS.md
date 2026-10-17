@@ -11,6 +11,7 @@
 - Keep LAN prototype mode separate from local API integration: vite.prototype.config.ts has no business proxy; normal developer integration pages live under /system.
 - Keep model keys in environment variables or ignored local configuration. Never copy PaiSmart's credentials or database.
 - Do not edit or restart the original `C:/workspace/PaiSmart` project as part of this project.
+- Current UI direction (2026-10-18) supersedes the older green community shell: adapt PaiSmart's Vue3/Naive UI layout, theme, login and conversation components under frontend/src/paismart while retaining campus APIs, Session/CSRF, role/account/club fences and all existing business controls. Mobile retains five bottom tabs plus a navigation drawer. Do not copy upstream credentials, JWT/billing/organization dependencies or unsupported controls. Preserve upstream attribution and the saved prototype archive. See docs/PAISMART-FRONTEND-ADAPTATION.md. SSR tests must use frontend/scripts/render.mjs to install the real css-render SSR adapter; do not replace real Naive UI components with test stubs.
 - Prefer small features across controller, service, persistence and frontend rather than empty abstractions.
 - Verify backend changes with `mvn -DskipTests=false test`; frontend changes with `npm run build`.
 - Verify integration with `node scripts/smoke.mjs` after starting the three processes.

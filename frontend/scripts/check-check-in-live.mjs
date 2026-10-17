@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
+import { renderToString } from './render.mjs';
 import { createSessionClient } from '../../scripts/http-session.mjs';
 
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5178';
