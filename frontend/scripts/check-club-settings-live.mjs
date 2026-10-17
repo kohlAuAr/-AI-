@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createServer } from 'vite';
+import { createSSRApp } from 'vue';
+import { renderToString } from '@vue/server-renderer';
+import { createSessionClient } from '../../scripts/http-session.mjs';
+
+const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5178';
+const stage = process.argv[2] || 'flow'; assert(['flow', 'restored'].includes(stage));
+const fixturePath = new URL('../../.run/club-settings-fixture.json', import.meta.url);
+const client = createSessionClient(base), anonymous = createSessionClient(base), outsider = createSessionClient(base);
+const realFetch = globalThis.fetch;
+globalThis.fetch = (url, options) => String(url).startsWith('/api/') ? client.request(String(url), options) : realFetch(url, options);
+globalThis.localStorage = { getItem: () => null, setItem: () => {} };
+globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+const server = await createServer({ configFile: false, plugins: [(await import('@vitejs/plugin-vue')).default()], server: { middlewareMode: true }, appType: 'custom' });
+const write = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+try {
+  const identity = await server.ssrLoadModule('/src/prototype/business.ts');
+  const settings = await server.ssrLoadModule('/src/community/clubSettings.ts');
+  const router = (await server.ssrLoadModule('/src/router.ts')).default;
+  const App = (await server.ssrLoadModule('/src/App.vue')).default;
+  async function page(path) { await router.push(path); await router.isReady(); return renderToString(createSSRApp(App).use(router)); }
+  async function login(username) { await identity.logout(); await identity.login(username, 'CampusDemo123!'); }
+  let fixture;
+  await identity.login('photo_manager', 'CampusDemo123!');
+  if (stage === 'flow') {
+    const suffix = Date.now().toString(36), username = `clubcfg_${suffix}`;
+    await anonymous.json('/api/auth/register', write('POST', { username, password: 'CampusDemo123!', name: '社团设置验收学生（虚构）', major: '测试专业' }));
+    await outsider.json('/api/auth/login', { method: 'POST', body: new URLSearchParams({ username: 'code_manager', password: 'CampusDemo123!' }) });
+    const input = { name: `社团设置联调（虚构）${suffix}`, category: '科技实践', description: '仅用于社团设置页面验收的公开虚构资料。', tags: '编程,摄影', campus: '虚构校区', recruiting: true, requirements: '欢迎零基础，了解招新说明后自愿申请', schedule: '周三晚上（文字说明）', place: '虚构学生中心' };
+    const club = await client.json('/api/manage/clubs', write('POST', input));
+    await identity.refreshBusiness(); identity.business.managedClubId = club.id;
+    await settings.loadClubSettings(); assert.equal(settings.currentClubSettings.value.id, club.id);
+    const initialMembers = await client.json(`/api/manage/clubs/${club.id}/members`);
+    await outsider.json(`/api/manage/clubs/${club.id}`, write('PUT', input), 403);
+    const noCsrf = await realFetch(`${base}/api/manage/clubs/${club.id}`, write('PUT', input)); assert.equal(noCsrf.status, 403);
+    await login(username);
+    const application = await client.json('/api/recruitment/applications', write('POST', { clubId: club.id, reason: '社团设置链虚构验收，不是真实申请' }));
+    await login('photo_manager'); identity.business.managedClubId = club.id; await settings.loadClubSettings();
+    const closed = { ...settings.clubInput(settings.currentClubSettings.value), description: '更新后的公开介绍：手机摄影、校园采风与入门教学。', requirements: '欢迎新手，自愿参加交流；不要求购买设备。', schedule: '周六下午（文字安排）', place: '虚构学生中心 206', recruiting: false };
+    assert(await settings.saveClubSettings(closed));
+    let publicClub = await anonymous.json(`/api/clubs/${club.id}`);
+    assert.equal(publicClub.description, closed.description); assert.equal(publicClub.recruiting, false); assert.equal(publicClub.campus, input.campus);
+    const pending = (await client.json(`/api/manage/clubs/${club.id}/applications`)).find(a => a.id === application.id);
+    assert.equal(pending.status, 'pending', 'closure retains pending application');
+    assert.deepEqual(await client.json(`/api/manage/clubs/${club.id}/members`), initialMembers, 'closure retains manager membership');
+    await login('student2');
+    await client.json('/api/recruitment/applications', write('POST', { clubId: club.id, reason: '关闭状态拒绝新申请' }), 409);
+    let html = await page(`/clubs/${club.id}`); assert(html.includes(closed.description) && html.includes('招新已结束'));
+    await client.json(`/api/manage/clubs/${club.id}`, write('PUT', closed), 403);
+    await login('photo_manager'); identity.business.managedClubId = club.id; await settings.loadClubSettings();
+    await client.json(`/api/manage/applications/${application.id}/review`, write('POST', { approved: true, feedback: '关闭招新仍可处理已有申请（虚构验收）' }));
+    const approved = (await client.json(`/api/manage/clubs/${club.id}/applications`)).find(a => a.id === application.id);
+    assert.equal(approved.status, 'approved');
+    assert(await settings.saveClubSettings({ ...closed, recruiting: true }));
+    await login('student2');
+    const reopenedApplication = await client.json('/api/recruitment/applications', write('POST', { clubId: club.id, reason: '重新开放招新后可申请（虚构验收）' }));
+    await login('photo_manager'); identity.business.managedClubId = club.id; await settings.loadClubSettings();
+    assert(await settings.saveClubSettings(closed));
+    publicClub = await anonymous.json(`/api/clubs/${club.id}`);
+    fixture = { clubId: club.id, username, applicationId: application.id, reopenedApplicationId: reopenedApplication.id, expected: settings.clubInput(publicClub), members: await client.json(`/api/manage/clubs/${club.id}/members`) };
+    await mkdir(new URL('../../.run/', import.meta.url), { recursive: true }); await writeFile(fixturePath, JSON.stringify(fixture, null, 2));
+  } else fixture = JSON.parse(await readFile(fixturePath, 'utf8'));
+  await identity.refreshBusiness(); identity.business.managedClubId = fixture.clubId; await settings.loadClubSettings();
+  assert.deepEqual(settings.clubInput(settings.currentClubSettings.value), fixture.expected);
+  assert.deepEqual(await client.json(`/api/manage/clubs/${fixture.clubId}/members`), fixture.members);
+  const savedApplications = await client.json(`/api/manage/clubs/${fixture.clubId}/applications`);
+  assert.equal(savedApplications.find(a => a.id === fixture.applicationId).status, 'approved');
+  assert.equal(savedApplications.find(a => a.id === fixture.reopenedApplicationId).status, 'pending');
+  assert((await page('/manage/club')).includes(fixture.expected.description));
+  await login(fixture.username);
+  assert.equal(settings.currentClubSettings.value, null);
+  assert((await page(`/clubs/${fixture.clubId}`)).includes(fixture.expected.description));
+  assert((await client.json('/api/memberships/mine')).some(m => m.clubId === fixture.clubId));
+  assert((await page('/manage/club')).includes('请使用社团负责人账号'));
+  console.log(`PASS ${stage}: Vue settings client + HTTP + SSR; club ${fixture.clubId}; complete fields, student visibility, closed/open application rules, preserved applications/members, scoped writes and persisted settings. No model call or real browser/mobile acceptance.`);
+} finally { await server.close(); globalThis.fetch = realFetch; }

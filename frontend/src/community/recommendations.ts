@@ -7,9 +7,10 @@ interface Result { method: string; items: Recommendation[] }
 export const recommendationState = reactive({ items: [] as Recommendation[], loading: false, error: '', requested: false });
 let generation = 0;
 const currentInterest = computed(() => business.user && business.profile?.id === business.user.id ? business.profile.interestDescription || '' : '');
-watch(() => [business.user?.id, currentInterest.value], () => {
+export function clearRecommendations() {
   ++generation; recommendationState.items = []; recommendationState.error = ''; recommendationState.requested = false; recommendationState.loading = false;
-}, { flush: 'sync' });
+}
+watch(() => [business.user?.id, currentInterest.value], clearRecommendations, { flush: 'sync' });
 export async function loadRecommendations() {
   if (!businessMode || recommendationState.loading) return;
   const userId = business.user?.id, interest = currentInterest.value, ticket = ++generation;

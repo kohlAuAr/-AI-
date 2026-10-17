@@ -9,7 +9,7 @@ interface User { id: number; username: string; name: string; major: string; role
 interface Session { user: User | null; demoAccounts: boolean }
 export interface Profile { id: number; username: string; name: string; major: string; role: User['role']; interests: string[]; availableTime: string; interestDescription: string }
 export type ProfileInput = Pick<Profile, 'name' | 'major' | 'interests' | 'availableTime' | 'interestDescription'>;
-interface ApiClub { id: number; slug: string | null; name: string; category: string; description: string; tags: string; recruiting: boolean; requirements: string; schedule: string; place: string; members: number }
+interface ApiClub { id: number; slug: string | null; name: string; category: string; campus: string; description: string; tags: string; recruiting: boolean; requirements: string; schedule: string; place: string; members: number }
 interface ApiApplication { id: number; clubId: number; userId: number; name: string; major: string; reason: string; status: Application['status']; feedback: string; createdAt: string }
 interface ApiMember { id: number; clubId: number; userId: number; name: string; major: string; role: string; joinedAt: string }
 export interface Member { id: string; clubId: string; name: string; major: string; role: string; date: string }
@@ -42,7 +42,7 @@ export async function refreshBusiness(): Promise<void> {
     business.clubs = rows.map(row => {
       const decoration = demoClubs.find(c => c.id === row.slug);
       return {
-        id: row.slug || String(row.id), backendId: row.id, name: row.name, category: row.category,
+        id: row.slug || String(row.id), backendId: row.id, name: row.name, category: row.category, campus: row.campus,
         description: row.description, tags: row.tags?.split(',').filter(Boolean) ?? [],
         members: row.members, recruiting: row.recruiting, requirements: row.requirements || '请联系社团负责人了解条件。',
         schedule: row.schedule || '待安排', place: row.place || '待安排',

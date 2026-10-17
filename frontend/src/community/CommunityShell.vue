@@ -16,7 +16,7 @@ const route = useRoute();
 function current(path: string) { return path === '/' ? route.path === '/' : route.path.startsWith(path); }
 const manager = computed(() => route.path.startsWith('/manage'));
 const secondary = computed(() => route.path === '/login' || route.path === '/guide' || route.path.startsWith('/clubs/') || (manager.value && route.path !== '/manage/activities') || (!businessMode && (route.path.startsWith('/activities') || route.path === '/messages' || manager.value)));
-const adminLinks = [{ path: '/manage', label: '工作概览' }, { path: '/manage/recruitment', label: '招新审核' }, { path: '/manage/members', label: '成员管理' }, { path: '/manage/activities', label: '活动管理' }, { path: '/manage/finance', label: '经费台账' }];
+const adminLinks = [...(businessMode ? [{ path: '/manage/club', label: '社团设置' }] : []), { path: '/manage', label: '工作概览' }, { path: '/manage/recruitment', label: '招新审核' }, { path: '/manage/members', label: '成员管理' }, { path: '/manage/activities', label: '活动管理' }, { path: '/manage/finance', label: '经费台账' }];
 const navigation = [
   { path: '/', label: '发现', icon: 'home' }, { path: '/clubs', label: '社团', icon: 'clubs' },
   { path: '/activities', label: '活动', icon: 'calendar' },

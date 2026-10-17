@@ -19,6 +19,10 @@ try {
   await activities.refreshActivities();
   check(businessFetches === 0, 'pure prototype activity store never calls business APIs');
   check(activities.activityState.activities.length === 0, 'formal activity records stay separate from prototype data');
+  const clubSettings = await server.ssrLoadModule('/src/community/clubSettings.ts');
+  await clubSettings.loadClubSettings();
+  check(businessFetches === 0, 'pure prototype club settings never call business APIs');
+  check(clubSettings.currentClubSettings.value === null, 'formal club settings are not exposed in prototype mode');
   const notifications = await server.ssrLoadModule('/src/community/notifications.ts');
   await notifications.refreshNotifications();
   check(businessFetches === 0, 'pure prototype notification store never calls business APIs');
