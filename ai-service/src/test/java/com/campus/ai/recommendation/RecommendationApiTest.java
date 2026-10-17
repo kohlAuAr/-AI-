@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Protocol fixture vectors test wiring and cache behavior, not real recommendation quality. */
 @SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:recommendations;DB_CLOSE_DELAY=-1", "ai.mode=openai", "ai.redis-enabled=false"})
+@org.springframework.context.annotation.Import(com.campus.ai.AiTestAuth.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class RecommendationApiTest {

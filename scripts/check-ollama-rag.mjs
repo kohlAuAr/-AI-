@@ -9,6 +9,7 @@ assert(['flow', 'restored', 'offline'].includes(mode));
 const fixturePath = new URL('../.run/ollama-rag-fixture.json', import.meta.url);
 const client = createSessionClient(base, 120000);
 const headers = { 'Content-Type': 'application/json' };
+await client.json('/api/auth/login', { method: 'POST', body: new URLSearchParams({ username: 'platform_admin', password: 'CampusDemo123!' }) });
 
 if (mode === 'offline') {
   assert.equal((await client.request('/api/ai/status')).status, 503);

@@ -79,15 +79,15 @@ class ModelRagIntegrationTest {
     void vectorRetrievalFeedsGenerationAndFollowUpHistory() {
         var imageDoc = knowledge.ingest("image.md", "影像实践交流欢迎新手。".getBytes(StandardCharsets.UTF_8));
         knowledge.ingest("sports.md", "篮球训练欢迎新手。".getBytes(StandardCharsets.UTF_8));
-        var reply = chat.ask("镜头构图如何学习", null);
+        var reply = chat.ask("镜头构图如何学习", null, com.campus.ai.AiTestAuth.ACTOR);
         assertThat(reply.mode()).isEqualTo("OPENAI");
         assertThat(reply.retrieval()).isEqualTo("KEYWORD_VECTOR");
         assertThat(reply.references()).hasSize(1);
         assertThat(reply.references().get(0).documentId()).isEqualTo(imageDoc.id());
         assertThat(reply.answer()).contains("[1]");
-        chat.ask("镜头学习需要什么", reply.conversationId());
+        chat.ask("镜头学习需要什么", reply.conversationId(), com.campus.ai.AiTestAuth.ACTOR);
         assertThat(lastMessages).contains("镜头构图如何学习", "可参加影像交流 [1]");
-        assertThat(chat.history(reply.conversationId())).hasSize(2);
+        assertThat(chat.history(com.campus.ai.AiTestAuth.ACTOR, reply.conversationId())).hasSize(2);
     }
 
     @Test

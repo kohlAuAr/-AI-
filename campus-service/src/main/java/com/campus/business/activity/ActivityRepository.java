@@ -6,6 +6,7 @@ import jakarta.persistence.LockModeType;
 import java.util.*;
 
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
+    java.util.Optional<Activity> findByDraftRequestId(String requestId);
     List<Activity> findByStatusOrderByStartTimeAsc(String status);
     List<Activity> findByClubIdOrderByIdDesc(Long clubId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)

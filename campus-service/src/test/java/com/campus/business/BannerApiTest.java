@@ -103,7 +103,7 @@ class BannerApiTest {
         mvc.perform(multipart("/api/platform/banners").file(metadata(invalid)).file(image()).session(admin).with(csrf())).andExpect(status().isBadRequest());
         invalid = body("CLUB", photo); invalid.put("sortOrder", -1);
         mvc.perform(multipart("/api/platform/banners").file(metadata(invalid)).file(image()).session(admin).with(csrf())).andExpect(status().isBadRequest());
-        mvc.perform(multipart("/api/ai/knowledge").file(new MockMultipartFile("file", "oversize.txt", "text/plain", new byte[128 * 1024 + 1])).with(csrf())).andExpect(status().isPayloadTooLarge());
+        mvc.perform(multipart("/api/ai/knowledge").file(new MockMultipartFile("file", "oversize.txt", "text/plain", new byte[128 * 1024 + 1])).session(admin).with(csrf())).andExpect(status().isPayloadTooLarge());
     }
     @Test
     void scheduleExpirationAndStableOrdering() throws Exception {

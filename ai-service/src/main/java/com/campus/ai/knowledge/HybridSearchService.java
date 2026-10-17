@@ -2,6 +2,7 @@ package com.campus.ai.knowledge;
 
 import com.campus.ai.client.ModelClient;
 import com.campus.ai.config.AiSettings;
+import com.campus.ai.security.AiActor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -26,7 +27,12 @@ public class HybridSearchService {
 
     @Transactional(readOnly = true)
     public SearchResponse search(String query) {
-        List<KnowledgeChunk> candidates = chunks.findAll();
+        return search(query, new AiActor(0, "STUDENT", Set.of(), Set.of()));
+    }
+    @Transactional(readOnly = true)
+    public SearchResponse search(String query, AiActor actor) {
+        // Authorization precedes query embedding, scoring and prompt construction.
+        List<KnowledgeChunk> candidates = chunks.findAll().stream().filter(chunk -> actor.canRead(chunk.getDocument())).toList();
         boolean vectorSearch = settings.modelEnabled() && settings.embeddingEnabled() && candidates.stream().anyMatch(this::compatible);
         double[] queryVector = vectorSearch ? models.embed(List.of(query)).get(0) : null;
         Set<String> terms = queryTerms(query);

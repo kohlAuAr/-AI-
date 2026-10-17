@@ -31,6 +31,8 @@ public class Activity {
     @Column(columnDefinition = "boolean default false")
     private boolean checkInOpen;
     private String checkInCode;
+    @Column(unique = true, length = 36)
+    private String draftRequestId;
     @Column(precision = 10, scale = 2)
     private BigDecimal budget;
 
@@ -68,6 +70,8 @@ public class Activity {
     public void closeCheckIn() { checkInOpen = false; checkInCode = null; }
     public boolean isCheckInOpen() { return checkInOpen; }
     public String getCheckInCode() { return checkInCode; }
+    public String getDraftRequestId() { return draftRequestId; }
+    public void draftRequest(String id) { draftRequestId = id; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public Long getUpdatedBy() { return updatedBy; }
     public LocalDateTime getCancelledAt() { return cancelledAt; }

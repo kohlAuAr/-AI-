@@ -2,6 +2,7 @@ package com.campus.ai.knowledge;
 
 import com.campus.ai.client.ModelClient;
 import com.campus.ai.config.AiSettings;
+import com.campus.ai.security.AiActor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.ByteBuffer;
@@ -34,17 +35,26 @@ public class KnowledgeService {
         this.mapper = mapper;
     }
 
-    public List<DocumentView> list() {
-        return documents.findAll().stream().map(this::view).toList();
+    public List<DocumentView> list(AiActor actor) {
+        return documents.findAll().stream().filter(actor::canRead).map(this::view).toList();
     }
 
-    public Map<String, Object> detail(Long id) {
-        KnowledgeDocument doc = documents.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "资料不存在"));
+    public Map<String, Object> detail(Long id, AiActor actor) {
+        KnowledgeDocument doc = documents.findById(id).filter(actor::canRead).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "资料不存在或无权访问"));
         return Map.of("document", view(doc), "content", doc.getContent());
     }
+    public boolean visible(Long id, AiActor actor) { return documents.findById(id).filter(actor::canRead).isPresent(); }
 
     @Transactional
     public DocumentView ingest(String filename, byte[] bytes) {
+        return ingestScoped(filename, bytes, "PUBLIC", null, null);
+    }
+    @Transactional
+    public DocumentView ingest(String filename, byte[] bytes, String visibility, Long clubId, AiActor actor) {
+        actor.requireUpload(visibility, clubId);
+        return ingestScoped(filename, bytes, visibility, clubId, actor.userId());
+    }
+    private DocumentView ingestScoped(String filename, byte[] bytes, String visibility, Long clubId, Long uploader) {
         String name = filename == null ? "" : filename.replace('\\', '/');
         name = name.substring(name.lastIndexOf('/') + 1);
         String lower = name.toLowerCase(Locale.ROOT);
@@ -60,11 +70,12 @@ public class KnowledgeService {
         if (texts.isEmpty() || texts.size() > 128) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料必须有正文且分块数量不能超过 128");
         boolean vectorIndex = settings.modelEnabled() && settings.embeddingEnabled();
         String version = vectorIndex ? models.embeddingVersion() : "local-keyword";
-        String fingerprint = fingerprint(content + "\0" + version);
+        String fingerprint = fingerprint(content + "\0" + version + "\0" + visibility + ":" + clubId);
         Optional<KnowledgeDocument> existing = documents.findByFingerprint(fingerprint);
         if (existing.isPresent()) return view(existing.get());
         List<double[]> vectors = vectorIndex ? models.embed(texts) : List.of();
         KnowledgeDocument doc = documents.save(new KnowledgeDocument(name, fingerprint, content, version, texts.size()));
+        doc.scope(visibility, clubId, uploader);
         List<KnowledgeChunk> savedChunks = new ArrayList<>();
         for (int i = 0; i < texts.size(); i++) {
             savedChunks.add(new KnowledgeChunk(doc, i, texts.get(i), vectors.isEmpty() ? null : json(vectors.get(i))));
@@ -84,8 +95,8 @@ public class KnowledgeService {
     }
 
     private DocumentView view(KnowledgeDocument doc) {
-        return new DocumentView(doc.getId(), doc.getName(), doc.getChunkCount(), doc.getEmbeddingVersion(), doc.getCreatedAt(), "PUBLIC_DEMO");
+        return new DocumentView(doc.getId(), doc.getName(), doc.getChunkCount(), doc.getEmbeddingVersion(), doc.getCreatedAt(), doc.getVisibility(), doc.getClubId());
     }
 
-    public record DocumentView(Long id, String name, int chunkCount, String embeddingVersion, Instant createdAt, String scope) {}
+    public record DocumentView(Long id, String name, int chunkCount, String embeddingVersion, Instant createdAt, String scope, Long clubId) {}
 }

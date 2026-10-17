@@ -54,6 +54,21 @@ public class ActivityService {
         activity.publish(); return view(activity);
     }
     @Transactional
+    public ActivityView confirmedDraft(Principal principal, Long clubId, String requestId, ActivityController.DraftRequest body) {
+        String key = UUID.fromString(requestId).toString(); Account manager = requireManager(principal, clubId);
+        var existing = activities.findByDraftRequestId(key);
+        if (existing.isPresent()) {
+            Activity row = existing.get();
+            if (!row.getClubId().equals(clubId) || !row.getCreatedBy().equals(manager.getId())) throw conflict("草稿请求标识不可用于此社团或账号");
+            if (!row.getTitle().equals(body.title().trim()) || !row.getDescription().equals(body.description().trim()) || !row.getLocation().equals(body.location().trim())
+                    || !row.getStartTime().equals(body.startTime().truncatedTo(java.time.temporal.ChronoUnit.MICROS)) || !row.getRegistrationDeadline().equals(body.registrationDeadline().truncatedTo(java.time.temporal.ChronoUnit.MICROS)) || row.getCapacity() != body.capacity()) throw conflict("此请求已保存不同内容，请读取原草稿核对");
+            return view(row);
+        }
+        validateTimes(body.startTime(), body.registrationDeadline());
+        Activity draft = Activity.draft(clubId, body.title(), body.description(), body.location(), body.startTime().truncatedTo(java.time.temporal.ChronoUnit.MICROS), body.registrationDeadline().truncatedTo(java.time.temporal.ChronoUnit.MICROS), body.capacity(), manager.getId());
+        draft.draftRequest(key); return view(activities.saveAndFlush(draft));
+    }
+    @Transactional
     public ActivityView update(Principal principal, Long id, ActivityController.DraftRequest body) {
         Activity activity = locked(id); Account manager = requireManager(principal, activity.getClubId());
         if (!List.of("DRAFT", "PUBLISHED").contains(activity.getStatus())) throw conflict("该状态的活动不能编辑");

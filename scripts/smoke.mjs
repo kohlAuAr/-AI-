@@ -19,6 +19,7 @@ async function ready() {
   throw new Error('Services did not become ready. Read .run/*-error.log and .run/*.log.');
 }
 await ready();
+await json('/api/auth/login', { method: 'POST', body: new URLSearchParams({ username: 'platform_admin', password: 'CampusDemo123!' }) });
 const system = await json('/api/system');
 assert.equal(system.security, 'LOCAL_DEMO_ONLY');
 assert(system.modules.some(module => module.key === 'recruitment' && module.status === 'READY'));

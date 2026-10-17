@@ -5,56 +5,30 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-/** PaiSmart's durable history + short Redis context split, without billing/session-generation state. */
+/** Durable history is authoritative; cached messages are scoped to account and current club access. */
 @Component
 public class SessionMemory {
-    private static final Logger log = LoggerFactory.getLogger(SessionMemory.class);
-    private final ConversationRepository conversations;
-    private final StringRedisTemplate redis;
-    private final AiSettings settings;
-    private final ObjectMapper mapper;
-
-    public SessionMemory(ConversationRepository conversations, StringRedisTemplate redis, AiSettings settings, ObjectMapper mapper) {
-        this.conversations = conversations;
-        this.redis = redis;
-        this.settings = settings;
-        this.mapper = mapper;
-    }
-
-    public List<Map<String, String>> recent(String id) {
+    private final StringRedisTemplate redis; private final AiSettings settings; private final ObjectMapper mapper;
+    public SessionMemory(StringRedisTemplate redis, AiSettings settings, ObjectMapper mapper) { this.redis = redis; this.settings = settings; this.mapper = mapper; }
+    private String key(String scope, String id) { return "campus:ai:v2:" + scope + ":" + id; }
+    public List<Map<String, String>> recent(String scope, String id, List<Map<String, String>> authorized) {
         if (settings.redisEnabled()) {
             try {
-                String cached = redis.opsForValue().get("campus:ai:session:" + id);
-                if (cached != null) return mapper.readValue(cached, new TypeReference<>() {});
-            } catch (org.springframework.dao.DataAccessException | java.io.IOException e) {
-                log.warn("Redis 短期上下文不可用，读取数据库历史");
-            }
+                String cached = redis.opsForValue().get(key(scope, id));
+                if (cached != null) {
+                    List<Map<String, String>> messages = mapper.readValue(cached, new TypeReference<>() {});
+                    if (messages.equals(authorized)) return messages;
+                }
+            } catch (org.springframework.dao.DataAccessException | java.io.IOException ignored) { /* Read authorized durable history. */ }
         }
-        return databaseMessages(id);
+        return authorized;
     }
-
-    public void refresh(String id) {
+    public void refresh(String scope, String id, List<Map<String, String>> messages) {
         if (!settings.redisEnabled()) return;
-        try {
-            redis.opsForValue().set("campus:ai:session:" + id, mapper.writeValueAsString(databaseMessages(id)), Duration.ofHours(2));
-        } catch (org.springframework.dao.DataAccessException | java.io.IOException e) {
-            log.warn("Redis 上下文更新失败；数据库历史已经保存");
-        }
-    }
-
-    private List<Map<String, String>> databaseMessages(String id) {
-        List<ConversationTurn> turns = new ArrayList<>(conversations.findTop6ByConversationIdOrderByIdDesc(id));
-        Collections.reverse(turns);
-        List<Map<String, String>> messages = new ArrayList<>();
-        for (ConversationTurn turn : turns) {
-            messages.add(Map.of("role", "user", "content", turn.getQuestion()));
-            messages.add(Map.of("role", "assistant", "content", turn.getAnswer()));
-        }
-        return messages;
+        try { redis.opsForValue().set(key(scope, id), mapper.writeValueAsString(messages), Duration.ofHours(2)); }
+        catch (org.springframework.dao.DataAccessException | java.io.IOException ignored) { /* Durable turn is already committed. */ }
     }
 }

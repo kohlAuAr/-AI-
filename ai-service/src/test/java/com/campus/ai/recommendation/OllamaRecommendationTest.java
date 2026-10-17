@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Native protocol fixture proves wiring/cache, not real Chinese recommendation quality. */
 @SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:ollama-recommendations;DB_CLOSE_DELAY=-1", "ai.mode=local", "ai.embedding-provider=ollama", "ai.redis-enabled=false"})
+@org.springframework.context.annotation.Import(com.campus.ai.AiTestAuth.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class OllamaRecommendationTest {

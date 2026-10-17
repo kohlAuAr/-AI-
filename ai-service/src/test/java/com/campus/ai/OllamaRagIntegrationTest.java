@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Native protocol fixture with synthetic vectors, not real model quality evidence. */
 @SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:ollama_rag;DB_CLOSE_DELAY=-1", "ai.mode=ollama", "ai.redis-enabled=false"})
 @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(com.campus.ai.AiTestAuth.class)
 @AutoConfigureMockMvc
 class OllamaRagIntegrationTest {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -110,32 +111,39 @@ class OllamaRagIntegrationTest {
         assertThat(doc.embeddingVersion()).contains("OLLAMA", "fixture-embedding");
         assertThat(imageDocument().id()).isEqualTo(doc.id());
         assertThat(paths).containsExactly("/api/embed");
-        var reply = chat.ask("镜头构图如何学习", null);
+        var reply = chat.ask("镜头构图如何学习", null, com.campus.ai.AiTestAuth.ACTOR);
         assertThat(reply.mode()).isEqualTo("OLLAMA");
         assertThat(reply.retrieval()).isEqualTo("KEYWORD_VECTOR");
         assertThat(reply.references()).hasSize(1);
         assertThat(reply.references().get(0).documentId()).isEqualTo(doc.id());
         assertThat(reply.answer()).contains("[1]");
         assertThat(lastMessages).contains("参考资料", "image.md", "影像实践交流", "资料未说明");
-        chat.ask("镜头学习能用手机吗", reply.conversationId());
+        chat.ask("镜头学习能用手机吗", reply.conversationId(), com.campus.ai.AiTestAuth.ACTOR);
         assertThat(lastMessages).contains("镜头构图如何学习", "欢迎影像新手");
-        assertThat(chat.history(reply.conversationId())).hasSize(2);
-        assertThat(chat.history(reply.conversationId()).get(0).references()).isEqualTo(reply.references());
+        assertThat(chat.history(com.campus.ai.AiTestAuth.ACTOR, reply.conversationId())).hasSize(2);
+        assertThat(chat.history(com.campus.ai.AiTestAuth.ACTOR, reply.conversationId()).get(0).references()).isEqualTo(reply.references());
         assertThat(paths).containsExactly("/api/embed", "/api/embed", "/api/chat", "/api/embed", "/api/chat");
     }
 
     @Test
     void noEvidenceSkipsGenerationEvenWithConversationHistory() {
         imageDocument();
-        var first = chat.ask("镜头构图如何学习", null);
+        var first = chat.ask("镜头构图如何学习", null, com.campus.ai.AiTestAuth.ACTOR);
         paths.clear();
-        var reply = chat.ask("abcdef不存在的信息", first.conversationId());
+        var reply = chat.ask("abcdef不存在的信息", first.conversationId(), com.campus.ai.AiTestAuth.ACTOR);
         assertThat(reply.references()).isEmpty();
         assertThat(reply.answer()).contains("没有找到足够相关的依据").doesNotContain("[1]");
         assertThat(paths).containsExactly("/api/embed");
-        assertThat(chat.history(first.conversationId())).hasSize(2);
+        assertThat(chat.history(com.campus.ai.AiTestAuth.ACTOR, first.conversationId())).hasSize(2);
     }
 
+    @Test
+    void explicitUnknownAnswerNeedsNoInventedCitation() {
+        imageDocument(); chatPayload.set("{\"message\":{\"role\":\"assistant\",\"content\":\"资料未说明。\"},\"done\":true}");
+        var reply = chat.ask("镜头交流的费用", null, com.campus.ai.AiTestAuth.ACTOR);
+        assertThat(reply.answer()).isEqualTo("资料未说明。");
+        assertThat(chat.history(com.campus.ai.AiTestAuth.ACTOR, reply.conversationId())).hasSize(1);
+    }
     @Test
     void embeddingFailureLeavesNoPartialDocumentOrConversation() {
         rejectEmbedding.set(true);
@@ -143,7 +151,7 @@ class OllamaRagIntegrationTest {
         assertThat(documents.count()).isZero();
         assertThat(chunks.count()).isZero();
         rejectEmbedding.set(false); imageDocument(); rejectEmbedding.set(true);
-        assertThatThrownBy(() -> chat.ask("镜头构图", null)).hasMessageContaining("401");
+        assertThatThrownBy(() -> chat.ask("镜头构图", null, com.campus.ai.AiTestAuth.ACTOR)).hasMessageContaining("401");
         assertThat(conversations.count()).isZero();
         assertThat(paths).doesNotContain("/api/chat");
     }
@@ -156,13 +164,13 @@ class OllamaRagIntegrationTest {
         mvc.perform(post("/internal/chat").contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isBadGateway()).andExpect(jsonPath("$.detail").value("模型接口返回 HTTP 503，请检查模型配置与额度"));
         chatStatus.set(200);
-        for (String payload : List.of("not-json", "{\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true}")) {
+        for (String payload : List.of("not-json", "{\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true}", "{\"message\":{\"role\":\"assistant\",\"content\":\"无引用回答\"},\"done\":true}", "{\"message\":{\"role\":\"assistant\",\"content\":\"越界引用 [99]\"},\"done\":true}")) {
             chatPayload.set(payload);
             mvc.perform(post("/internal/chat").contentType(MediaType.APPLICATION_JSON).content(request))
                     .andExpect(status().isBadGateway());
         }
         assertThat(conversations.count()).isZero();
-        assertThat(paths.stream().filter("/api/chat"::equals).count()).isEqualTo(3);
+        assertThat(paths.stream().filter("/api/chat"::equals).count()).isEqualTo(5);
     }
 
     @Test

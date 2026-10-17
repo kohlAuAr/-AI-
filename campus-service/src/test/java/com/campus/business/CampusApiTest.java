@@ -28,6 +28,6 @@ class CampusApiTest {
 
     @Test
     void invalidHistoryPathIsRejectedBeforeCallingAi() throws Exception {
-        mvc.perform(get("/api/ai/conversations/not-a-uuid")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/ai/conversations/not-a-uuid")).andExpect(status().isUnauthorized());
     }
 }

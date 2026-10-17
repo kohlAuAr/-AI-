@@ -19,6 +19,7 @@ public class ConversationTurn {
     private String mode;
     private String retrieval;
     private Instant createdAt;
+    @Lob private String stepsJson;
 
     protected ConversationTurn() {}
 
@@ -39,4 +40,6 @@ public class ConversationTurn {
     public String getMode() { return mode; }
     public String getRetrieval() { return retrieval; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getStepsJson() { return stepsJson == null ? "[]" : stepsJson; }
+    public void steps(String json) { stepsJson = json; }
 }

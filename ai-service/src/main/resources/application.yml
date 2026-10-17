@@ -33,6 +33,8 @@ management:
   health:
     redis:
       enabled: ${AI_REDIS_ENABLED:false}
+service:
+  internal-token: ${AI_INTERNAL_TOKEN:}
 ai:
   mode: ${AI_MODE:local}
   redis-enabled: ${AI_REDIS_ENABLED:false}

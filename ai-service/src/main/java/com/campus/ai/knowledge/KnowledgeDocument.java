@@ -18,6 +18,9 @@ public class KnowledgeDocument {
     private String embeddingVersion;
     private int chunkCount;
     private Instant createdAt;
+    private String visibility;
+    private Long clubId;
+    private Long uploadedBy;
 
     protected KnowledgeDocument() {}
 
@@ -36,4 +39,8 @@ public class KnowledgeDocument {
     public String getEmbeddingVersion() { return embeddingVersion; }
     public int getChunkCount() { return chunkCount; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getVisibility() { return visibility == null ? "PUBLIC" : visibility; }
+    public Long getClubId() { return clubId; }
+    public Long getUploadedBy() { return uploadedBy; }
+    public void scope(String visibility, Long clubId, Long uploadedBy) { this.visibility = visibility; this.clubId = clubId; this.uploadedBy = uploadedBy; }
 }

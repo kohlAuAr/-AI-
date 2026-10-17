@@ -24,6 +24,8 @@ public class ActivityController {
     }
     @PostMapping("/manage/activities/{id}/publish")
     public ActivityService.ActivityView publish(Principal user, @PathVariable Long id) { return activities.publish(user, id); }
+    @PutMapping("/manage/clubs/{clubId}/drafts/{requestId}")
+    public ActivityService.ActivityView confirmedDraft(Principal user, @PathVariable Long clubId, @PathVariable String requestId, @Valid @RequestBody DraftRequest body) { return activities.confirmedDraft(user, clubId, requestId, body); }
     @PutMapping("/manage/activities/{id}")
     public ActivityService.ActivityView update(Principal user, @PathVariable Long id, @Valid @RequestBody DraftRequest body) { return activities.update(user, id, body); }
     @PostMapping("/manage/activities/{id}/cancel")

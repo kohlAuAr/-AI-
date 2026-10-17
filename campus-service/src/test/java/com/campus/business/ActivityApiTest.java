@@ -70,6 +70,28 @@ class ActivityApiTest {
         return mvc.perform(post("/api/activities/" + id + "/registrations/cancel").session(session).with(csrf()));
     }
     @Test
+    void confirmedDraftIsOwnedIdempotentAndNeverAutoPublished() throws Exception {
+        String path = "/api/manage/clubs/" + photo + "/drafts/" + UUID.randomUUID();
+        var body = new HashMap<>(draftBody(25)); String json = mapper.writeValueAsString(body);
+        long before = activities.count();
+        mvc.perform(put(path).session(studentSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json)).andExpect(status().isForbidden());
+        mvc.perform(put(path).session(outsiderSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json)).andExpect(status().isForbidden());
+        mvc.perform(put(path).session(managerSession).contentType(MediaType.APPLICATION_JSON).content(json)).andExpect(status().isForbidden());
+        String response = mvc.perform(put(path).session(managerSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("DRAFT")).andReturn().getResponse().getContentAsString();
+        long id = mapper.readTree(response).path("id").asLong();
+        mvc.perform(get("/api/activities/" + id)).andExpect(status().isNotFound());
+        mvc.perform(put(path).session(managerSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(id));
+        assertEquals(before + 1, activities.count());
+        body.put("title", "不同内容");
+        mvc.perform(put(path).session(managerSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body))).andExpect(status().isConflict());
+        publish(managerSession, id).andExpect(status().isOk());
+        mvc.perform(put(path).session(managerSession).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PUBLISHED"));
+        assertEquals(before + 1, activities.count());
+    }
+    @Test
     void draftPublishSignupCancelAndFreshLoginWithoutAi() throws Exception {
         long id = draft(2);
         mvc.perform(get("/api/activities/" + id)).andExpect(status().isNotFound());

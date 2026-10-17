@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:ai_test;DB_CLOSE_DELAY=-1", "ai.mode=local", "ai.redis-enabled=false"})
+@org.springframework.context.annotation.Import(com.campus.ai.AiTestAuth.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class KnowledgeChatTest {
@@ -35,7 +36,7 @@ class KnowledgeChatTest {
     @Test
     void uploadRetrieveAndPersistReferencesAcrossHistory() throws Exception {
         var file = new MockMultipartFile("file", "photography.md", "text/markdown", "摄影社招新时间为十月，摄影新手可以参加构图交流。".getBytes(StandardCharsets.UTF_8));
-        mvc.perform(multipart("/internal/knowledge").file(file)).andExpect(status().isOk()).andExpect(jsonPath("$.scope").value("PUBLIC_DEMO"));
+        mvc.perform(multipart("/internal/knowledge").file(file)).andExpect(status().isOk()).andExpect(jsonPath("$.scope").value("PUBLIC"));
         mvc.perform(multipart("/internal/knowledge").file(file)).andExpect(status().isOk());
         assertThat(documents.count()).isEqualTo(1);
         String response = mvc.perform(post("/internal/chat").contentType(MediaType.APPLICATION_JSON).content("{\"question\":\"摄影社招新时间\"}"))
