@@ -28,8 +28,8 @@ public class ApiErrors {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ProblemDetail expectedError(ResponseStatusException error) {
-        return ProblemDetail.forStatusAndDetail(error.getStatusCode(), error.getReason() == null ? "请求失败" : error.getReason());
+    public ResponseEntity<ProblemDetail> expectedError(ResponseStatusException error) {
+        return new ResponseEntity<>(ProblemDetail.forStatusAndDetail(error.getStatusCode(), error.getReason() == null ? "请求失败" : error.getReason()), error.getHeaders(), error.getStatusCode());
     }
 
     @ExceptionHandler(ResourceAccessException.class)

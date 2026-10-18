@@ -14,17 +14,20 @@ public class RecommendationController {
     private final ProfileService profiles;
     private final ClubRepository clubs;
     private final AiServiceClient ai;
-    public RecommendationController(ProfileService profiles, ClubRepository clubs, AiServiceClient ai) {
-        this.profiles = profiles; this.clubs = clubs; this.ai = ai;
+    private final AiRateLimiter limiter;
+    public RecommendationController(ProfileService profiles, ClubRepository clubs, AiServiceClient ai, AiRateLimiter limiter) {
+        this.profiles = profiles; this.clubs = clubs; this.ai = ai; this.limiter = limiter;
     }
 
     @PostMapping
     public Result recommend(Principal principal) {
-        String interest = profiles.mine(principal).interestDescription();
+        var profile = profiles.mine(principal);
+        String interest = profile.interestDescription();
         if (interest.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请先在个人资料中填写兴趣描述，再获取推荐");
         List<Club> candidates = clubs.findAllByOrderByIdAsc().stream().filter(Club::isRecruiting)
                 .filter(club -> !verificationFixture(club)).toList();
         if (candidates.isEmpty()) return new Result("HYBRID_BM25_VECTOR_RRF", List.of());
+        limiter.check(profile.id());
         // The browser cannot supply another account's interest or invent candidate clubs.
         var response = ai.recommend(Map.of("interest", interest, "clubs", candidates.stream()
                 .map(club -> Map.of("id", club.getId(), "text", clubText(club))).toList()));

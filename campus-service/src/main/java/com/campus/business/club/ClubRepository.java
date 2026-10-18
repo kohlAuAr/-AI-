@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClubRepository extends JpaRepository<Club, Long> {
     List<Club> findAllByOrderByIdAsc();
+    @Query("select c.id from Club c order by c.id")
+    List<Long> findIds();
     Optional<Club> findBySlug(String slug);
     Optional<Club> findByName(String name);
     @Lock(LockModeType.PESSIMISTIC_WRITE)

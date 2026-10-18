@@ -71,13 +71,7 @@ public class ChatService {
     }
     public List<TurnView> history(AiActor actor, String id) {
         UUID.fromString(id); requireOwner(actor, id);
-        return conversations.findByConversationIdOrderByIdAsc(id).stream().map(turn -> {
-            List<Citation> references = parse(turn.getReferencesJson(), new TypeReference<>() {});
-            boolean authorized = references.stream().allMatch(ref -> knowledge.visible(ref.documentId(), actor));
-            return new TurnView(turn.getQuestion(), authorized ? turn.getAnswer() : "此回答引用的资料目前不可访问，请重新提问。",
-                    authorized ? references : List.of(), turn.getMode(), turn.getRetrieval(), turn.getCreatedAt(),
-                    authorized ? parse(turn.getStepsJson(), new TypeReference<List<ToolStep>>() {}) : List.of());
-        }).toList();
+        return conversations.findByConversationIdOrderByIdAsc(id).stream().map(turn -> authorizedView(actor, turn)).toList();
     }
     public List<SessionView> sessions(AiActor actor) {
         return owners.findByOwnerIdOrderByCreatedAtDesc(actor.userId()).stream().limit(50).map(row -> new SessionView(row.getId(), row.getCreatedAt())).toList();
@@ -98,11 +92,22 @@ public class ChatService {
     }
     private ResponseStatusException badCitations() { return new ResponseStatusException(HttpStatus.BAD_GATEWAY, "模型未正确标注本次资料编号，回答未保存。请重新提问并要求附带 [1] 等来源编号"); }
     private List<Map<String, String>> databaseMessages(AiActor actor, String id) {
-        List<TurnView> turns = history(actor, id); List<Map<String, String>> result = new ArrayList<>();
-        for (TurnView turn : turns.subList(Math.max(0, turns.size() - 6), turns.size())) {
+        requireOwner(actor, id);
+        List<ConversationTurn> recent = new ArrayList<>(conversations.findTop6ByConversationIdOrderByIdDesc(id));
+        Collections.reverse(recent);
+        List<Map<String, String>> result = new ArrayList<>();
+        for (ConversationTurn row : recent) {
+            TurnView turn = authorizedView(actor, row);
             result.add(Map.of("role", "user", "content", turn.question())); result.add(Map.of("role", "assistant", "content", turn.answer()));
         }
         return result;
+    }
+    private TurnView authorizedView(AiActor actor, ConversationTurn turn) {
+        List<Citation> references = parse(turn.getReferencesJson(), new TypeReference<>() {});
+        boolean authorized = references.stream().allMatch(ref -> knowledge.visible(ref.documentId(), actor));
+        return new TurnView(turn.getQuestion(), authorized ? turn.getAnswer() : "此回答引用的资料目前不可访问，请重新提问。",
+                authorized ? references : List.of(), turn.getMode(), turn.getRetrieval(), turn.getCreatedAt(),
+                authorized ? parse(turn.getStepsJson(), new TypeReference<List<ToolStep>>() {}) : List.of());
     }
     private String json(Object value) { try { return mapper.writeValueAsString(value); } catch (JsonProcessingException error) { throw new IllegalStateException("会话序列化失败", error); } }
     private <T> T parse(String value, TypeReference<T> type) { try { return mapper.readValue(value, type); } catch (JsonProcessingException error) { throw new IllegalStateException("会话读取失败", error); } }

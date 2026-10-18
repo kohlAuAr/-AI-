@@ -12,8 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class AiController {
     private final AiServiceClient ai;
     private final AiIdentity identity;
+    private final AiRateLimiter limiter;
 
-    public AiController(AiServiceClient ai, AiIdentity identity) { this.ai = ai; this.identity = identity; }
+    public AiController(AiServiceClient ai, AiIdentity identity, AiRateLimiter limiter) { this.ai = ai; this.identity = identity; this.limiter = limiter; }
 
     @GetMapping("/status")
     public JsonNode status() { return ai.get("status"); }
@@ -31,11 +32,14 @@ public class AiController {
         boolean allowed = visibility.equals("PUBLIC") ? actor.role().equals("PLATFORM_ADMIN") && clubId == null
                 : visibility.equals("CLUB") && actor.role().equals("MANAGER") && clubId != null && actor.managedClubs().contains(clubId);
         if (!allowed) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "仅平台管理员可上传公开资料，社团资料由所属负责人上传");
+        limiter.check(actor.id());
         return ai.upload(file.getOriginalFilename(), file.getBytes(), visibility, clubId, actor);
     }
 
     @PostMapping("/chat")
-    public JsonNode chat(Principal user, @RequestBody Map<String, Object> body) { return ai.ask("chat", body, identity.current(user)); }
+    public JsonNode chat(Principal user, @RequestBody Map<String, Object> body) {
+        var actor = identity.current(user); limiter.check(actor.id()); return ai.ask("chat", body, actor);
+    }
 
     @GetMapping("/conversations/{id}")
     public JsonNode history(Principal user, @PathVariable String id) {
@@ -44,7 +48,9 @@ public class AiController {
         return ai.get("conversations/" + id, identity.current(user));
     }
     @PostMapping("/assistant")
-    public JsonNode assistant(Principal user, @RequestBody Map<String, Object> body) { return ai.ask("assistant", body, identity.current(user)); }
+    public JsonNode assistant(Principal user, @RequestBody Map<String, Object> body) {
+        var actor = identity.current(user); limiter.check(actor.id()); return ai.ask("assistant", body, actor);
+    }
     @GetMapping("/conversations")
     public JsonNode sessions(Principal user) { return ai.get("conversations", identity.current(user)); }
 }

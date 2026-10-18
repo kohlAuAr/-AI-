@@ -23,6 +23,7 @@ public class SessionMemory {
                     if (messages.equals(authorized)) return messages;
                 }
             } catch (org.springframework.dao.DataAccessException | java.io.IOException ignored) { /* Read authorized durable history. */ }
+            refresh(scope, id, authorized);
         }
         return authorized;
     }

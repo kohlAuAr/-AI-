@@ -11,6 +11,13 @@ server:
 spring:
   application:
     name: campus-service
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:16379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 500ms
+      connect-timeout: 500ms
   profiles:
     default: demo
   datasource:
@@ -26,6 +33,9 @@ spring:
       max-file-size: 2MB
       max-request-size: 3MB
 management:
+  health:
+    redis:
+      enabled: ${CAMPUS_REDIS_ENABLED:false}
   endpoints:
     web:
       exposure:
@@ -34,3 +44,5 @@ service:
   internal-token: ${AI_INTERNAL_TOKEN:}
 campus:
   ai-base-url: ${AI_SERVICE_URL:http://127.0.0.1:8091}
+  redis-enabled: ${CAMPUS_REDIS_ENABLED:false}
+  ai-requests-per-minute: ${AI_REQUESTS_PER_MINUTE:5}

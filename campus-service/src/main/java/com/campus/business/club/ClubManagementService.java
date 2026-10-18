@@ -15,8 +15,9 @@ public class ClubManagementService {
     private final ClubRepository clubs;
     private final MembershipRepository memberships;
     private final IdentityService identity;
-    public ClubManagementService(ClubRepository clubs, MembershipRepository memberships, IdentityService identity) {
-        this.clubs = clubs; this.memberships = memberships; this.identity = identity;
+    private final ClubCatalogCache cache;
+    public ClubManagementService(ClubRepository clubs, MembershipRepository memberships, IdentityService identity, ClubCatalogCache cache) {
+        this.clubs = clubs; this.memberships = memberships; this.identity = identity; this.cache = cache;
     }
     public List<ClubController.ClubView> mine(Principal principal) {
         return memberships.findByUserIdAndRole(identity.current(principal).getId(), "MANAGER").stream()
@@ -35,7 +36,7 @@ public class ClubManagementService {
         Club club = clubs.findLockedById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "社团不存在"));
         if (!memberships.existsByUserIdAndClubIdAndRole(identity.current(principal).getId(), id, "MANAGER"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "只能维护自己负责的社团");
-        club.update(body); clubs.flush(); return view(club);
+        club.update(body); clubs.flush(); cache.evictAfterCommit(id); return view(club);
     }
     private ClubController.ClubView view(Club club) {
         return new ClubController.ClubView(club.getId(), club.getSlug(), club.getName(), club.getCategory(), club.getDescription(), club.getTags(), club.getCampus(),
