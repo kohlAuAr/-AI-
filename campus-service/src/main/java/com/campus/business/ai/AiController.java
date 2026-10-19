@@ -27,11 +27,12 @@ public class AiController {
 
     @PostMapping("/knowledge")
     public JsonNode upload(Principal user, @RequestParam MultipartFile file, @RequestParam(defaultValue = "PUBLIC") String visibility, @RequestParam(required = false) Long clubId) throws IOException {
-        if (file.getSize() > 128 * 1024) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE, "资料文件不能超过 128KB");
         var actor = identity.current(user);
         boolean allowed = visibility.equals("PUBLIC") ? actor.role().equals("PLATFORM_ADMIN") && clubId == null
                 : visibility.equals("CLUB") && actor.role().equals("MANAGER") && clubId != null && actor.managedClubs().contains(clubId);
         if (!allowed) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "仅平台管理员可上传公开资料，社团资料由所属负责人上传");
+        boolean pdf = file.getOriginalFilename() != null && file.getOriginalFilename().toLowerCase(java.util.Locale.ROOT).endsWith(".pdf");
+        if (file.getSize() > (pdf ? 5 * 1024 * 1024 : 128 * 1024)) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE, pdf ? "PDF 文件不能超过 5MB" : "文本资料不能超过 128KB");
         limiter.check(actor.id());
         return ai.upload(file.getOriginalFilename(), file.getBytes(), visibility, clubId, actor);
     }

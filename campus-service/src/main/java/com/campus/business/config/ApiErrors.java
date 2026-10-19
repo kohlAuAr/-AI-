@@ -52,6 +52,6 @@ public class ApiErrors {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ProblemDetail tooLarge() {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "海报文件不能超过 2MB；知识资料仍限制为 128KB");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "上传超出限制：海报最大 2MB，PDF 最大 5MB，Markdown/TXT 最大 128KB");
     }
 }

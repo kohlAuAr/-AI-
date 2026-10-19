@@ -5,8 +5,7 @@ import com.campus.ai.config.AiSettings;
 import com.campus.ai.security.AiActor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.ByteBuffer;
-import java.nio.charset.*;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -57,15 +56,8 @@ public class KnowledgeService {
     private DocumentView ingestScoped(String filename, byte[] bytes, String visibility, Long clubId, Long uploader) {
         String name = filename == null ? "" : filename.replace('\\', '/');
         name = name.substring(name.lastIndexOf('/') + 1);
-        String lower = name.toLowerCase(Locale.ROOT);
-        if (name.length() > 128 || !(lower.endsWith(".txt") || lower.endsWith(".md"))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "骨架当前只支持 UTF-8 编码的 .txt 或 .md 资料，文件名最多 128 字符");
-        }
-        if (bytes.length == 0 || bytes.length > 128 * 1024) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "文件必须非空且不能超过 128KB");
-        String content;
-        try { content = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString(); }
-        catch (CharacterCodingException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料不是有效的 UTF-8 文本"); }
-        if (content.indexOf('\0') >= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料包含非文本内容");
+        if (name.length() > 128) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料文件名最多 128 字符");
+        String content = KnowledgeTextExtractor.extract(name, bytes);
         List<String> texts = chunker.split(content);
         if (texts.isEmpty() || texts.size() > 128) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "资料必须有正文且分块数量不能超过 128");
         boolean vectorIndex = settings.modelEnabled() && settings.embeddingEnabled();

@@ -39,6 +39,6 @@ public class ApiErrors {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ProblemDetail tooLarge() {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "资料文件不能超过 128KB");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "上传超出限制：PDF 最大 5MB，Markdown/TXT 最大 128KB");
     }
 }

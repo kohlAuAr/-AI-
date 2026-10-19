@@ -8,6 +8,9 @@
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-bom</artifactId><version>${spring-ai.version}</version><type>pom</type><scope>import</scope></dependency>
   </dependencies></dependencyManagement>
   <dependencies>
+    <dependency><groupId>org.apache.pdfbox</groupId><artifactId>pdfbox</artifactId><version>3.0.8</version><exclusions>
+      <exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion>
+    </exclusions></dependency>
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-ollama</artifactId></dependency>
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-openai</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
