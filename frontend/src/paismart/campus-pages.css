@@ -66,11 +66,6 @@ html { background: #f7fafc; }
 .paismart-campus th { background: #fafafc; font-weight: 500; }
 .paismart-campus :is(th, td) { border-bottom: 1px solid #efeff5; padding: 14px 12px; }
 .paismart-campus .community-banner-section { margin: 0 0 24px; }
-.paismart-campus .community-banner-slide { border-radius: 12px; }
-.paismart-campus .community-banner-slide > img { aspect-ratio: 2.65; }
-.paismart-campus .community-banner-caption { max-width: 48%; padding: 12px 16px; background: #ffffffee; border-radius: 8px; }
-.paismart-campus .community-banner-caption h2 { font-size: 23px; }
-.paismart-campus .community-banner-caption > span, .paismart-campus .community-banner-action { color: #555cd6; }
 .paismart-mobile-nav.community-bottom-nav { display: none; }
 .paismart-home-columns { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, 1fr); gap: 24px; }
 .paismart-home-panel { padding: 24px; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 3%); min-width: 0; }
@@ -125,8 +120,6 @@ html { background: #f7fafc; }
   .paismart-home-header { margin: 0 4px 18px; } .paismart-home-header h1 { font-size: 22px; } .paismart-home-header > a { padding: 8px; font-size: 12px; }
   .paismart-home-discover.community-directory { padding: 0; } .paismart-home-clubs { grid-template-columns: minmax(0, 1fr); }
   .paismart-home-club { padding: 16px; } .paismart-home-club > p { min-height: 0; }
-  .paismart-campus .community-banner-slide > img { aspect-ratio: 1.7; }
-  .paismart-campus .community-banner-caption { left: 12px; top: 14px; max-width: 64%; padding: 8px 10px; } .paismart-campus .community-banner-caption h2 { font-size: 18px; }
   .paismart-campus .community-workspace-nav { gap: 18px; padding: 4px 16px; flex-wrap: nowrap; overflow-x: auto; } .paismart-campus .community-workspace-nav a { white-space: nowrap; }
   .paismart-campus .community-page-title h1 { font-size: 21px; } .paismart-campus .community-category-tabs { gap: 18px; }
   .paismart-campus .community-club-row { gap: 0; } .paismart-campus .community-club-cover { width: 50px; height: 50px; } .paismart-campus .community-club-link { gap: 12px; }

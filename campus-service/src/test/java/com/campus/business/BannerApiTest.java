@@ -74,6 +74,17 @@ class BannerApiTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.role").value("STUDENT"));
     }
     @Test
+    void bundledDemoArtworkIsDecodableJpeg() throws Exception {
+        var examples = banners.findAll().stream().filter(b -> b.getTitle().endsWith("（示例）")).toList();
+        assertEquals(3, examples.size());
+        for (var banner : examples) {
+            var response = mvc.perform(get("/api/platform/banners/" + banner.getId() + "/image").session(admin))
+                    .andExpect(status().isOk()).andExpect(content().contentType("image/jpeg")).andReturn().getResponse();
+            var image = ImageIO.read(new java.io.ByteArrayInputStream(response.getContentAsByteArray()));
+            assertNotNull(image); assertEquals(1536, image.getWidth()); assertEquals(864, image.getHeight());
+        }
+    }
+    @Test
     void createEditImageAndReversibleVisibility() throws Exception {
         long id = create(body("CLUB", photo)); assertFalse(visible(id));
         mvc.perform(get("/api/banners/" + id + "/image")).andExpect(status().isNotFound());

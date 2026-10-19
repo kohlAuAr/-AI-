@@ -1,19 +1,39 @@
 .community-banner-section { margin: 0 24px 24px; }
-.community-banner-slide { display: block; position: relative; overflow: hidden; border-radius: 10px; background: var(--community-bg); color: var(--community-text); }
-.community-banner-slide > img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
-.community-banner-caption { position: absolute; left: 24px; top: 24px; max-width: 54%; padding: 10px 12px; border-radius: 6px; background: rgba(255,255,255,.93); }
-.community-banner-caption > span { font-size: 12px; color: #395747; }
-.community-banner-caption h2 { font-size: 22px; line-height: 1.45; margin: 6px 0; text-wrap: balance; overflow-wrap: anywhere; }
-.community-banner-caption p { font-size: 13px; color: #4a5750; }
-.community-banner-action { position: absolute; left: 24px; bottom: 16px; border-radius: 4px; padding: 6px 10px; font-size: 12px; background: rgba(255,255,255,.93); color: #395747; }
-.community-banner-controls { display: flex; align-items: center; justify-content: center; gap: 8px; padding-top: 4px; }
-.community-app .community-banner-controls button { min-width: 44px; min-height: 44px; cursor: pointer; font-size: 24px; color: var(--community-green); }
-.community-banner-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; }
-.community-app .community-banner-dots button { min-width: 28px; }
-.community-banner-dots span { display: inline-block; width: 6px; height: 6px; background: #a6afab; border-radius: 50%; }
-.community-banner-dots [aria-pressed="true"] span { width: 16px; border-radius: 4px; background: var(--community-green); }
-.community-banner-position { font-size: 12px; color: var(--community-muted); white-space: nowrap; }
-.community-app .community-banner-controls .community-banner-play { font-size: 13px; }
+.community-banner-stage { position: relative; width: 100%; overflow: hidden; isolation: isolate; border-radius: 16px; background: #202c32; min-height: 400px; aspect-ratio: 2.5; }
+.community-banner-slide { position: absolute; inset: 0; display: flex; align-items: center; padding: 36px 44px 100px; touch-action: pan-y; color: #fff; }
+.community-banner-slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: -2; }
+.community-banner-slide::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(8 18 27 / 80%), rgb(8 18 27 / 24%) 68%, rgb(8 18 27 / 5%)), linear-gradient(0deg, rgb(8 18 27 / 72%), transparent 48%); z-index: -1; }
+.community-banner-caption { max-width: min(66%, 600px); color: #fff; }
+.community-banner-label { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12px; line-height: 1.6; color: rgb(255 255 255 / 86%); }
+.community-banner-label > span:first-child { padding: 4px 10px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 4px; }
+.community-banner-caption h2 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: clamp(28px, 3.2vw, 42px); font-weight: 650; line-height: 1.28; letter-spacing: -.025em; margin: 0 0 12px; text-wrap: balance; overflow-wrap: anywhere; color: #fff; }
+.community-banner-caption p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; line-height: 1.6; color: rgb(255 255 255 / 80%); }
+.community-banner-action { display: inline-flex; align-items: center; gap: 10px; margin-top: 24px; font-size: 13px; font-weight: 500; color: #fff; }
+.community-banner-action > svg { width: 28px; height: 28px; padding: 5px; border: 1px solid rgb(255 255 255 / 48%); border-radius: 50%; transition: transform .2s ease; }
+.community-banner-slide:hover .community-banner-action > svg { transform: translateX(3px); }
+.community-banner-controls { position: absolute; z-index: 2; left: 32px; right: 32px; bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.community-banner-pagination, .community-banner-navigation, .community-banner-dots { display: flex; align-items: center; gap: 8px; }
+.community-banner-pagination { gap: 16px; min-width: 0; }
+.community-app .community-banner-controls button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 1px solid rgb(255 255 255 / 32%); border-radius: 50%; background: rgb(0 0 0 / 14%); color: #fff; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
+.community-app .community-banner-controls button:hover { background: rgb(255 255 255 / 18%); border-color: rgb(255 255 255 / 70%); }
+.community-banner-controls .community-icon { width: 18px; height: 18px; }
+.community-banner-previous > svg { transform: rotate(180deg); }
+.community-app .community-banner-dots button { min-width: 28px; width: 28px; border: 0; border-radius: 0; background: transparent; }
+.community-app .community-banner-dots button:hover { background: transparent; }
+.community-banner-dots button > span { display: block; position: relative; overflow: hidden; width: 24px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / 35%); }
+.community-banner-dots i { display: block; height: 100%; width: 100%; background: transparent; }
+.community-banner-dots [aria-pressed="true"] i { background: #fff; }
+.community-banner-stage.is-playing .community-banner-dots [aria-pressed="true"] i { transform-origin: left; animation: banner-progress 6s linear both; }
+.community-banner-position { font-size: 12px; font-variant-numeric: tabular-nums; color: rgb(255 255 255 / 65%); white-space: nowrap; }
+.community-banner-position strong { color: #fff; font-size: 16px; margin-right: 4px; font-weight: 500; }
+.community-app .community-banner-controls .community-banner-play { gap: 5px; min-width: 72px; padding: 0 12px; border-radius: 24px; font-size: 12px; }
+.community-app .community-banner-section :is(a, button):focus-visible { outline: 2px solid #fff; outline-offset: -5px; }
+.community-banner-fade-enter-active, .community-banner-fade-leave-active { transition: opacity .22s ease; }
+.community-banner-fade-enter-from, .community-banner-fade-leave-to { opacity: 0; }
+@keyframes banner-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .community-banner-stage *, .community-banner-stage *::before { animation: none !important; transition: none !important; }
+}
 .community-banner-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 16px; border-bottom: 1px solid var(--community-line); }
 .community-banner-toolbar > div { display: flex; align-items: center; gap: 12px; }
 .community-banner-toolbar > span { color: var(--community-muted); font-size: 13px; }
@@ -30,12 +50,22 @@
 .community-platform-page :is(input, select, textarea, button):focus-visible { outline: 2px solid var(--community-green); outline-offset: 3px; }
 @media (max-width: 600px) {
   .community-banner-section { margin: 0 16px 20px; }
-  .community-banner-slide > img { aspect-ratio: 3 / 2; }
-  .community-banner-caption { left: 12px; top: 12px; padding: 6px 8px; max-width: 56%; }
-  .community-banner-caption h2 { font-size: 17px; margin: 4px 0; }
-  .community-banner-caption > span { font-size: 11px; }
-  .community-banner-caption p { font-size: 12px; }
-  .community-banner-action { display: none; }
+  .community-banner-stage { min-height: 380px; aspect-ratio: 4 / 4.5; border-radius: 12px; }
+  .community-banner-slide { padding: 28px 24px 96px; align-items: flex-end; }
+  .community-banner-slide > img { object-position: 62% center; }
+  .community-banner-slide::before { background: linear-gradient(0deg, rgb(8 18 27 / 94%), rgb(8 18 27 / 50%) 65%, rgb(8 18 27 / 8%)); }
+  .community-banner-caption { max-width: 100%; }
+  .community-banner-caption h2 { font-size: clamp(27px, 7vw, 34px); }
+  .community-banner-label { margin-bottom: 14px; font-size: 11px; }
+  .community-banner-caption p { font-size: 13px; }
+  .community-banner-action { margin-top: 18px; }
+  .community-banner-controls { left: 20px; right: 20px; bottom: 16px; gap: 8px; }
+  .community-banner-pagination { gap: 8px; }
+  .community-banner-position { display: none; }
+  .community-banner-dots { gap: 0; }
+  .community-banner-navigation { gap: 6px; }
+  .community-app .community-banner-controls .community-banner-play { min-width: 44px; padding: 0; }
+  .community-banner-play > span { display: none; }
   .community-banner-toolbar { padding: 0 16px 16px; }
   .community-banner-row { margin: 0 16px; flex-direction: column; gap: 12px; }
   .community-banner-row > img { width: 100%; height: auto; aspect-ratio: 12 / 5; }

@@ -73,10 +73,10 @@ public class DemoData implements CommandLineRunner {
         if (!memberships.existsByUserIdAndClubId(account.getId(), clubId)) memberships.save(new Membership(account.getId(), clubId, "MANAGER"));
     }
     private void seedBanner(String title, String illustration, Long targetId, BannerController.TargetType type, int order, Long admin) throws java.io.IOException {
-        // Trusted bundled SVG illustrations only; user uploads accept decoded PNG/JPG, never SVG.
+        // Bundled fictional campus artwork; existing banner records are never overwritten.
         byte[] image;
-        try (var input = new ClassPathResource("demo-banners/" + illustration + ".svg").getInputStream()) { image = input.readAllBytes(); }
-        Banner banner = new Banner(new BannerController.BannerRequest(title + "（示例）", type, targetId, order, null, null), image, "image/svg+xml", admin);
+        try (var input = new ClassPathResource("demo-banners/" + illustration + "-editorial.jpg").getInputStream()) { image = input.readAllBytes(); }
+        Banner banner = new Banner(new BannerController.BannerRequest(title + "（示例）", type, targetId, order, null, null), image, "image/jpeg", admin);
         banner.setEnabled(true, admin); banners.save(banner);
     }
 }
