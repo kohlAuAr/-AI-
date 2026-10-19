@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -19,12 +21,12 @@ public class SecurityConfig {
     UserDetailsService userDetailsService(AccountRepository accounts) {
         return username -> {
             Account account = accounts.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("账号不存在"));
-            return User.withUsername(account.getUsername()).password(account.getPasswordHash()).roles(account.getRole()).build();
+            return new AccountPrincipal(account);
         };
     }
 
     @Bean
-    SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper) throws Exception {
+    SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper, AccountRepository accounts, AuthRateLimiter limiter) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/internal/ai/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ai/status").permitAll()
@@ -36,9 +38,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/manage/**").hasRole("MANAGER")
                 .anyRequest().authenticated())
             .csrf(csrf -> csrf.ignoringRequestMatchers("/internal/ai/**"))
+            .addFilterBefore(new CredentialVersionFilter(accounts), CsrfFilter.class)
+            .addFilterBefore(new AuthRateLimitFilter(limiter, mapper), UsernamePasswordAuthenticationFilter.class)
             .requestCache(cache -> cache.disable())
             .formLogin(form -> form.loginProcessingUrl("/api/auth/login")
                 .successHandler((request, response, authentication) -> {
+                    limiter.succeeded(authentication.getName());
                     response.setContentType("application/json;charset=UTF-8");
                     mapper.writeValue(response.getWriter(), Map.of("status", "OK"));
                 })

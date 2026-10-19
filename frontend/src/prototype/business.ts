@@ -100,6 +100,16 @@ export async function login(username: string, password: string) {
 export async function register(input: { username: string; password: string; name: string; major: string }) {
   return request<Profile>('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
 }
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const userId = business.user?.id;
+  if (!businessMode || !userId) throw new Error('请先登录再修改密码');
+  const ticket = ++generation;
+  business.loading = false;
+  await request('/auth/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) });
+  if (ticket !== generation || business.user?.id !== userId) throw new Error('账号状态已变化，请重新登录确认原账号的密码');
+  ++generation; business.user = null; business.managedClubId = null; clearPrivateRecords();
+  business.loading = false; business.error = '';
+}
 export async function saveProfile(input: ProfileInput) {
   const userId = business.user?.id;
   if (!userId) throw new Error('请先登录再编辑资料');

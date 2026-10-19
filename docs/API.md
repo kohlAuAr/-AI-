@@ -10,6 +10,7 @@
 | GET | `/api/auth/session` | 当前身份、CSRF token/header 名称、是否启用演示账号；匿名也可读取 |
 | POST | `/api/auth/login` | form-urlencoded 的 username/password；成功建立 HttpOnly Session Cookie |
 | POST | `/api/auth/logout` | 注销当前会话，业务记录不删除 |
+| POST | `/api/auth/password` | 已登录账号提交 currentPassword/newPassword；需 CSRF，提交成功后全部旧会话失效 |
 | POST | `/api/auth/register` | JSON 学生注册；匿名可用，但仍需 CSRF；不能申请负责人角色 |
 | GET | `/api/profile` | 当前账号资料与兴趣，不接受他人 userId |
 | PUT | `/api/profile` | 修改本人姓名、专业、兴趣数组和空闲时间文字，不改角色/账号 |

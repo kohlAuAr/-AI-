@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'vite';
+import { createSSRApp } from 'vue';
+import { renderToString } from './render.mjs';
+
+globalThis.localStorage = { getItem: () => null, setItem: () => {} };
+globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+const student = { id: 1, username: 'security_student', name: '测试学生', major: '软件工程', role: 'STUDENT', managedClubIds: [] };
+const other = { ...student, id: 2, username: 'security_other' };
+let business, mode = 'success', release, pending, writes = [];
+globalThis.fetch = async (url, options = {}) => {
+  if (url === '/api/auth/session') return Response.json({ user: business.user, csrfHeader: 'X-CSRF-TOKEN', csrfToken: 'test-csrf' });
+  assert.equal(url, '/api/auth/password');
+  assert.equal(options.method, 'POST');
+  assert.equal(new Headers(options.headers).get('X-CSRF-TOKEN'), 'test-csrf');
+  writes.push(JSON.parse(options.body));
+  if (mode === 'failure') return Response.json({ detail: '当前密码不正确' }, { status: 400 });
+  if (mode === 'lost') throw new Error('连接中断');
+  if (pending) await pending;
+  return Response.json({ status: 'OK' });
+};
+try {
+  const module = await server.ssrLoadModule('/src/prototype/business.ts');
+  business = module.business;
+  await assert.rejects(module.changePassword('old', 'new'), /先登录/);
+  assert.equal(writes.length, 0);
+  business.user = { ...student }; business.profile = { ...student, interests: [], availableTime: '', interestDescription: '' };
+  business.favoriteIds = [10]; business.applications = [{ id: 'old-private' }]; business.managedClubId = 10;
+  mode = 'failure';
+  await assert.rejects(module.changePassword('bad-password', 'NewPassword123!'), /当前密码不正确/);
+  assert.equal(business.user.id, student.id); assert.equal(business.favoriteIds[0], 10);
+  mode = 'lost';
+  await assert.rejects(module.changePassword('OldPassword123!', 'NewPassword123!'), /连接中断/);
+  assert.equal(business.user.id, student.id, 'lost response does not claim success');
+  mode = 'success'; business.loading = true;
+  await module.changePassword('OldPassword123!', 'NewPassword123!');
+  assert.equal(business.user, null); assert.equal(business.profile, null);
+  assert.equal(business.managedClubId, null); assert.equal(business.favoriteIds.length, 0);
+  assert.equal(business.applications.length, 0); assert.equal(business.loading, false);
+  assert.deepEqual(writes.at(-1), { currentPassword: 'OldPassword123!', newPassword: 'NewPassword123!' });
+  business.user = { ...student };
+  pending = new Promise(resolve => release = resolve);
+  const late = module.changePassword('OldPassword123!', 'NewPassword123!');
+  await new Promise(resolve => setTimeout(resolve, 0));
+  business.user = { ...other }; business.favoriteIds = [20];
+  release(); await assert.rejects(late, /账号状态已变化/);
+  assert.equal(business.user.id, other.id); assert.equal(business.favoriteIds[0], 20);
+  pending = null;
+  const router = (await server.ssrLoadModule('/src/router.ts')).default;
+  const editor = (await server.ssrLoadModule('/src/community/CommunityPasswordEditor.vue')).default;
+  await router.push('/me'); await router.isReady();
+  const html = await renderToString(createSSRApp(editor).use(router));
+  for (const label of ['修改密码', '当前密码', '新密码', '确认新密码', '修改密码并重新登录', '其他已登录设备', '连接中断']) assert(html.includes(label), label);
+  assert(html.includes('autocomplete="current-password"') && html.includes('autocomplete="new-password"'));
+  assert(!html.includes('OldPassword123!') && !html.includes('NewPassword123!'), 'passwords never appear in rendered initial markup');
+  console.log('PASS account security: authenticated/CSRF-only request, failed and lost responses, private-state clearing, late-account isolation and accessible form SSR. No real browser acceptance claimed.');
+} finally { await server.close(); }

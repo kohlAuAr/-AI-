@@ -98,7 +98,7 @@
 .community-account-tabs { padding: 0; margin-bottom: 20px; }
 .community-app .community-profile-hint { font-size: 14px; color: var(--community-muted); margin-bottom: 20px; }
 .community-profile-time { padding: 0 24px 12px; font-size: 13px; color: var(--community-muted) !important; }
-.community-profile-refresh { display: flex; justify-content: flex-end; padding: 0 16px 8px; }
+.community-profile-refresh { display: flex; justify-content: flex-end; gap: 16px; padding: 0 16px 8px; }
 .community-app .community-form-fields :is(input, textarea) { width: 100%; }
 .community-app .community-login-intro { color: var(--community-muted); font-size: 14px; line-height: 1.8; margin-bottom: 24px; }
 .community-demo-accounts { border-top: 1px solid var(--community-line); margin-top: 24px; padding-top: 16px; color: var(--community-muted); font-size: 13px; }

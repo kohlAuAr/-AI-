@@ -8,6 +8,7 @@
     "typecheck": "vue-tsc --noEmit",
     "test:prototype": "node scripts/test-prototype.mjs",
     "test:business": "node scripts/test-business.mjs",
+    "test:account-security": "node scripts/test-account-security.mjs",
     "test:ai-workflows": "node scripts/test-ai-workflows.mjs",
     "test:model-settings": "node scripts/test-model-settings.mjs",
     "test:finance": "node scripts/test-finance.mjs",

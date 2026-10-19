@@ -1,8 +1,10 @@
 package com.campus.business.identity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
+@DynamicUpdate
 @Table(name = "campus_account")
 public class Account {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -11,6 +13,8 @@ public class Account {
     private String username;
     @Column(nullable = false)
     private String passwordHash;
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long credentialVersion;
     @Column(nullable = false)
     private String name;
     private String major;
@@ -30,6 +34,8 @@ public class Account {
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getPasswordHash() { return passwordHash; }
+    public long getCredentialVersion() { return credentialVersion; }
+    public void changePassword(String hash) { passwordHash = hash; credentialVersion++; }
     public String getName() { return name; }
     public String getMajor() { return major; }
     public String getRole() { return role; }
