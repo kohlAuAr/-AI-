@@ -104,7 +104,7 @@ class PlatformModelsTest {
         assertThat(profiles.findById("CHAT").orElseThrow().draftJson).doesNotContain("fixture-new-cloud-key");
         // Recreate the runtime from the same durable rows; unswitched cloud draft is not activated.
         var bootstrap = new AiSettings(AiSettings.Mode.LOCAL, false, new AiSettings.Provider(base(), "", ""), new AiSettings.Provider(base(), "", ""), AiSettings.EmbeddingProvider.NONE);
-        new PlatformModels(bootstrap, profiles, secrets, endpoints, JSON, RestClient.builder()).restore();
+        new PlatformModels(bootstrap, profiles, secrets, endpoints, JSON, RestClient.builder(), new com.campus.ai.client.ModelCallGate(2)).restore();
         assertThat(bootstrap.chat().model()).isEqualTo("fixture-chat"); assertThat(bootstrap.embedding().model()).isEqualTo("fixture-embed");
     }
     @Test void requestSnapshotsAndMasterKeysDoNotLeakOrChangeMidRequest() {

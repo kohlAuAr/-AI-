@@ -29,3 +29,5 @@ Naive UI 使用与本地 PaiSmart 相同的 2.41.0 版本，通过 npm 依赖引
 AI 模块通过 Maven 依赖 Spring AI 1.0.9 的 `spring-ai-ollama`、`spring-ai-openai`，项目地址 https://github.com/spring-projects/spring-ai ，上游许可 Apache License 2.0。本项目调用其公开 API，未复制其源码文件。采用框架接入不撤销上表中仍保留的 PaiSmart 改造来源。
 
 文字版 PDF 解析通过 Maven 依赖 Apache PDFBox 3.0.8（含 pdfbox-io、fontbox），项目地址 https://pdfbox.apache.org/ ，上游许可 Apache License 2.0；调用 Loader、PDFTextStripper 的公开 API，未复制其源码或 ExtractEmbeddedFiles 示例，不提取附件或执行脚本。测试使用程序生成的虚构 PDF；本机中文验收使用系统字体生成临时测试文件，不分发系统字体文件。
+
+正式 MySQL 建表通过 Maven 依赖 Flyway Core/MySQL（Spring Boot 3.4.2 管理的 10.20.1，Apache License 2.0），仅调用公开 API，未复制源码。部署使用官方 MySQL、Redis、Nginx、Eclipse Temurin 容器镜像并记录固定 digest；各组件遵循各自随镜像分发的许可证，本项目不修改或删除其许可证。

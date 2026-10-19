@@ -1,0 +1,27 @@
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 320s
+  config:
+    import: 'configtree:/run/secrets/'
+  flyway:
+    enabled: true
+  jpa:
+    properties:
+      hibernate.jdbc.time_zone: UTC
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/campus_ai?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: campus_ai_app
+    hikari:
+      maximum-pool-size: 6
+server:
+  shutdown: graceful
+  address: 0.0.0.0
+ai:
+  redis-enabled: true
+  max-concurrent-model-requests: ${AI_MAX_CONCURRENT_MODEL_REQUESTS:2}
+logging:
+  level:
+    root: INFO

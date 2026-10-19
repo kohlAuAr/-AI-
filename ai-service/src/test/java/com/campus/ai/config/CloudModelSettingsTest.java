@@ -32,7 +32,7 @@ class CloudModelSettingsTest {
         var secrets = new ModelSecrets(Base64.getEncoder().encodeToString(new byte[32]));
         String base = "https://provider.example.invalid/v1";
         var policy = new ModelEndpointPolicy(base, settings);
-        var models = new PlatformModels(settings, repository, secrets, policy, new ObjectMapper(), http);
+        var models = new PlatformModels(settings, repository, secrets, policy, new ObjectMapper(), http, new com.campus.ai.client.ModelCallGate(2));
         server.expect(times(2), requestTo(base + "/chat/completions"))
                 .andExpect(header("Authorization", "Bearer synthetic-chat-key"))
                 .andExpect(jsonPath("$.model").value("fixture-cloud-chat"))
@@ -57,7 +57,7 @@ class CloudModelSettingsTest {
         assertThat(rows.get("EMBEDDING").activeJson).doesNotContain("synthetic-embedding-key");
         assertThat(models.view().toString()).doesNotContain("synthetic-chat-key", "synthetic-embedding-key", "encryptedKey");
         var restored = new AiSettings(AiSettings.Mode.LOCAL, false, provider, provider, AiSettings.EmbeddingProvider.NONE);
-        new PlatformModels(restored, repository, secrets, policy, new ObjectMapper(), http).restore();
+        new PlatformModels(restored, repository, secrets, policy, new ObjectMapper(), http, new com.campus.ai.client.ModelCallGate(2)).restore();
         assertThat(restored.mode()).isEqualTo(AiSettings.Mode.OPENAI);
         assertThat(restored.effectiveEmbeddingProvider()).isEqualTo(AiSettings.EmbeddingProvider.OPENAI);
         assertThat(restored.chat().apiKey()).isEqualTo("synthetic-chat-key");

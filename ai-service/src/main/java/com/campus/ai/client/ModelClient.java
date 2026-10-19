@@ -37,10 +37,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class ModelClient {
     private final AiSettings settings;
     private final RestClient.Builder builder;
+    private final ModelCallGate gate;
 
     public ModelClient(AiSettings settings, RestClient.Builder builder) {
+        this(settings, builder, new ModelCallGate(2));
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public ModelClient(AiSettings settings, RestClient.Builder builder, ModelCallGate gate) {
         this.settings = settings;
         this.builder = builder;
+        this.gate = gate;
     }
 
     public String embeddingVersion() {
@@ -48,6 +54,9 @@ public class ModelClient {
     }
 
     public List<double[]> embed(List<String> texts) {
+        return gate.call(() -> embedWithinSlot(texts));
+    }
+    private List<double[]> embedWithinSlot(List<String> texts) {
         if (!settings.embeddingEnabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "请先配置 Embedding 模型与接入方式");
         EmbeddingModel model = embeddingModel();
         List<double[]> vectors = new ArrayList<>();
@@ -69,6 +78,9 @@ public class ModelClient {
     }
 
     public String chat(List<Map<String, String>> messages) {
+        return gate.call(() -> chatWithinSlot(messages));
+    }
+    private String chatWithinSlot(List<Map<String, String>> messages) {
         if (!settings.modelEnabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "当前是本地摘录模式，未启用聊天模型");
         List<Message> prompt = messages.stream().map(message -> switch (message.get("role")) {
             case "system" -> (Message) new SystemMessage(message.get("content"));

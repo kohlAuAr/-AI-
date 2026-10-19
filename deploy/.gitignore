@@ -1,0 +1,8 @@
+secrets/
+tls/
+backups/
+.env
+.release
+.previous
+.lock/
+releases/

@@ -1,0 +1,13 @@
+.git
+.run
+.env*
+**/node_modules
+**/data
+**/target/*
+!campus-service/target/campus-service-0.1.0-SNAPSHOT.jar
+!ai-service/target/ai-service-0.1.0-SNAPSHOT.jar
+artifacts
+public-prototype
+deploy/secrets
+deploy/tls
+deploy/backups

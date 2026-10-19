@@ -9,6 +9,8 @@ server:
         http-only: true
         same-site: lax
 spring:
+  flyway:
+    enabled: false
   application:
     name: campus-service
   data:

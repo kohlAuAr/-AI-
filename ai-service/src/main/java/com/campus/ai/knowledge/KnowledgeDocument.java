@@ -12,7 +12,7 @@ public class KnowledgeDocument {
     private String name;
     @Column(nullable = false, unique = true, length = 64)
     private String fingerprint;
-    @Lob @Column(nullable = false)
+    @Lob @Column(nullable = false, columnDefinition = "longtext")
     private String content;
     @Column(nullable = false, length = 500)
     private String embeddingVersion;

@@ -10,11 +10,11 @@ public class ConversationTurn {
     private Long id;
     @Column(nullable = false, length = 36)
     private String conversationId;
-    @Lob @Column(nullable = false)
+    @Lob @Column(nullable = false, columnDefinition = "longtext")
     private String question;
-    @Lob @Column(nullable = false)
+    @Lob @Column(nullable = false, columnDefinition = "longtext")
     private String answer;
-    @Lob @Column(nullable = false)
+    @Lob @Column(nullable = false, columnDefinition = "longtext")
     private String referencesJson;
     private String mode;
     private String retrieval;

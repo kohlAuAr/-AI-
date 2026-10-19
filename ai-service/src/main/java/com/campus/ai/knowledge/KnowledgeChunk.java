@@ -12,9 +12,9 @@ public class KnowledgeChunk {
     private KnowledgeDocument document;
     @Column(name = "chunk_number", nullable = false)
     private int chunkNumber;
-    @Lob @Column(nullable = false)
+    @Lob @Column(nullable = false, columnDefinition = "longtext")
     private String content;
-    @Lob
+    @Lob @Column(columnDefinition = "longtext")
     private String vectorJson;
 
     protected KnowledgeChunk() {}

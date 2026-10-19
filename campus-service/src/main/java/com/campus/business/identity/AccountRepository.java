@@ -8,6 +8,7 @@ import jakarta.persistence.LockModeType;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByUsername(String username);
+    boolean existsByRole(String role);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from Account a where a.username = :username")
     Optional<Account> findForPasswordChange(String username);

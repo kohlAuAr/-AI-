@@ -1,0 +1,24 @@
+-- Initial schema for NEW MySQL databases only. Existing H2 data requires explicit import.
+create table activity_expense (amount decimal(10,2) not null, occurred_on date, activity_id bigint not null, created_at datetime(6), created_by bigint, id bigint not null auto_increment, voided_at datetime(6), voided_by bigint, request_id varchar(36) not null, description varchar(200) not null, void_reason varchar(300), status varchar(255), primary key (id)) engine=InnoDB;
+create table activity_registration (activity_id bigint not null, cancelled_at datetime(6), checked_in_at datetime(6), id bigint not null auto_increment, registered_at datetime(6), user_id bigint not null, status varchar(255), primary key (id)) engine=InnoDB;
+create table campus_account (credential_version bigint default 0 not null, id bigint not null auto_increment, username varchar(64) not null, available_time varchar(200), interest_tags varchar(300), interest_description varchar(1000), major varchar(255), name varchar(255) not null, password_hash varchar(255) not null, role varchar(255) not null, primary key (id)) engine=InnoDB;
+create table club (demo bit not null, recruiting boolean default true, id bigint not null auto_increment, slug varchar(64), requirements varchar(500), description varchar(2000), campus varchar(255), category varchar(255), name varchar(255) not null, place varchar(255), schedule varchar(255), tags varchar(255), primary key (id)) engine=InnoDB;
+create table club_activity (budget decimal(10,2), capacity integer not null, check_in_open boolean default false, demo bit not null, cancelled_at datetime(6), cancelled_by bigint, club_id bigint not null, created_by bigint, id bigint not null auto_increment, published_at datetime(6), registration_deadline datetime(6), start_time datetime(6), updated_at datetime(6), updated_by bigint, draft_request_id varchar(36), cancel_reason varchar(300), description varchar(2000), check_in_code varchar(255), location varchar(255), status varchar(255), title varchar(255), primary key (id)) engine=InnoDB;
+create table club_application (club_id bigint not null, created_at datetime(6) not null, id bigint not null auto_increment, reviewed_at datetime(6), reviewed_by bigint, user_id bigint not null, active_key varchar(80), feedback varchar(300) not null, reason varchar(500) not null, status varchar(255) not null, primary key (id)) engine=InnoDB;
+create table club_favorite (club_id bigint not null, created_at datetime(6), id bigint not null auto_increment, user_id bigint not null, primary key (id)) engine=InnoDB;
+create table club_membership (club_id bigint not null, id bigint not null auto_increment, joined_at datetime(6) not null, user_id bigint not null, role varchar(255) not null, primary key (id)) engine=InnoDB;
+create table homepage_banner (enabled bit not null, sort_order integer not null, created_at datetime(6), ends_at datetime(6), id bigint not null auto_increment, starts_at datetime(6), target_id bigint, updated_at datetime(6), updated_by bigint, title varchar(80) not null, content_type varchar(255), target_type varchar(255), image LONGBLOB not null, primary key (id)) engine=InnoDB;
+create table station_notification (created_at datetime(6), id bigint not null auto_increment, read_at datetime(6), source_id bigint, user_id bigint not null, content varchar(600), target_path varchar(255), title varchar(255), type varchar(255), primary key (id)) engine=InnoDB;
+alter table activity_expense add constraint UK2k3y5mwysjwphpv549q23l5ja unique (activity_id, request_id);
+alter table activity_registration add constraint UK3nqnrkxdiap52etoso8mweke7 unique (activity_id, user_id);
+alter table campus_account add constraint UK5w9p8h3fni9fadk3hd6j2tr9b unique (username);
+alter table club add constraint UKmkeyvuletileoguv2pu77kvvk unique (slug);
+alter table club add constraint UKobh7q4yqh38kicj65tm0wd4t4 unique (name);
+alter table club_activity add constraint UKnyjtm9o2w2qma6h9jd77jn7g8 unique (draft_request_id);
+create index idx_application_user on club_application (user_id, id);
+create index idx_application_club on club_application (club_id, id);
+alter table club_application add constraint UKsps3r5voja4rqdcqfqvnvt5by unique (active_key);
+alter table club_favorite add constraint UKa35wnlmibf4by1ceyh7r58vnb unique (user_id, club_id);
+create index idx_membership_club on club_membership (club_id);
+alter table club_membership add constraint uq_member_user_club unique (user_id, club_id);
+create index IDX1t4fon6kyfmcy68msadm8utp1 on station_notification (user_id, id);

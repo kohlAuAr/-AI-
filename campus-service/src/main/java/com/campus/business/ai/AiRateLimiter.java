@@ -23,13 +23,20 @@ public class AiRateLimiter {
     private final StringRedisTemplate redis;
     private final boolean enabled;
     private final int limit;
+    private final AiDailyQuota daily;
     public AiRateLimiter(StringRedisTemplate redis, @Value("${campus.redis-enabled:false}") boolean enabled,
                          @Value("${campus.ai-requests-per-minute:5}") int limit) {
+        this(redis, enabled, limit, null);
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public AiRateLimiter(StringRedisTemplate redis, @Value("${campus.redis-enabled:false}") boolean enabled,
+                         @Value("${campus.ai-requests-per-minute:5}") int limit, AiDailyQuota daily) {
         if (limit < 1) throw new IllegalArgumentException("AI request limit must be positive");
         this.redis = redis; this.enabled = enabled; this.limit = limit;
+        this.daily = daily;
     }
     public void check(long accountId) {
-        if (!enabled) return;
+        if (!enabled) { if (daily != null) daily.check(accountId); return; }
         Long retry;
         try { retry = redis.execute(LIMIT, List.of("campus:business:ai-rate:v1:" + accountId), Integer.toString(limit)); }
         catch (DataAccessException error) { throw unavailable(); }
@@ -41,6 +48,7 @@ public class AiRateLimiter {
                 }
             };
         }
+        if (daily != null) daily.check(accountId);
     }
     private ResponseStatusException unavailable() {
         return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 访问控制暂不可用，请稍后再试；社团、活动和报名仍可使用。");

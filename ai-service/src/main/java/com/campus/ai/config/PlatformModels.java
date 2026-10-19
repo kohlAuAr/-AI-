@@ -1,6 +1,7 @@
 package com.campus.ai.config;
 
 import com.campus.ai.client.ModelClient;
+import com.campus.ai.client.ModelCallGate;
 import com.fasterxml.jackson.databind.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.*;
@@ -30,11 +31,13 @@ class PlatformModels {
     private final ModelEndpointPolicy endpoints;
     private final ObjectMapper mapper;
     private final RestClient.Builder http;
+    private final ModelCallGate gate;
 
-    PlatformModels(AiSettings settings, ModelProfileRepository profiles, ModelSecrets secrets, ModelEndpointPolicy endpoints, ObjectMapper mapper, RestClient.Builder http) {
+    PlatformModels(AiSettings settings, ModelProfileRepository profiles, ModelSecrets secrets, ModelEndpointPolicy endpoints, ObjectMapper mapper, RestClient.Builder http, ModelCallGate gate) {
         this.settings = settings;
         this.bootstrap = new AiSettings(settings.mode(), settings.redisEnabled(), settings.chat(), settings.embedding(), settings.effectiveEmbeddingProvider());
         this.profiles = profiles; this.secrets = secrets; this.endpoints = endpoints; this.mapper = mapper; this.http = http;
+        this.gate = gate;
     }
     @PostConstruct void restore() { publish(); }
     synchronized Map<String, Object> view() {
@@ -109,7 +112,7 @@ class PlatformModels {
             var provider = provider(stored, purpose);
             var candidate = new AiSettings(stored.protocol().equals("OLLAMA") ? AiSettings.Mode.OLLAMA : AiSettings.Mode.OPENAI, false, provider, provider,
                     stored.protocol().equals("OLLAMA") ? AiSettings.EmbeddingProvider.OLLAMA : AiSettings.EmbeddingProvider.OPENAI);
-            var model = new ModelClient(candidate, http);
+            var model = new ModelClient(candidate, http, gate);
             if (purpose == Purpose.EMBEDDING) {
                 var vectors = model.embed(List.of("校园社团连接测试", "摄影与编程兴趣"));
                 return Map.of("ok", true, "dimension", vectors.get(0).length, "notice", "向量接口测试通过；尚未代表推荐质量验收。");
