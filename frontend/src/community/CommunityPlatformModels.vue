@@ -8,6 +8,12 @@ import CommunityDialog from './CommunityDialog.vue';
 const allowed = computed(canManageModels), selected = ref<Purpose>('CHAT');
 const profile = computed(() => modelAdmin.overview?.profiles.find(p => p.purpose === selected.value));
 const form = reactive({ protocol: 'OLLAMA' as Protocol, vendor: 'Ollama', baseUrl: 'http://127.0.0.1:11434', model: '', apiKey: '' });
+// Behind Docker the host's Ollama is reachable as host.docker.internal, not 127.0.0.1.
+// Prefer whatever exact address the deployment allowlisted so "检测" works unedited.
+function defaultOllamaUrl(): string {
+  const allowedUrls = modelAdmin.overview?.allowedBaseUrls ?? [];
+  return allowedUrls.find(url => /11434/.test(url)) ?? 'http://127.0.0.1:11434';
+}
 const installed = ref<string[]>([]), notice = ref(''), confirmation = ref(false), reindex = ref(false), cloud = ref(false);
 const labels = { CHAT: '聊天模型', EMBEDDING: 'Embedding 模型' };
 const protocols = { NONE: '关闭模型能力', OLLAMA: '本地部署 · Ollama', OPENAI: '云端 API · OpenAI 兼容' };
@@ -15,7 +21,7 @@ let scope = 0;
 const dirty = computed(() => !!profile.value && (form.protocol !== profile.value.draft.protocol || form.vendor !== profile.value.draft.vendor || form.baseUrl !== profile.value.draft.baseUrl || form.model !== profile.value.draft.model || !!form.apiKey));
 function reset() {
   const value = profile.value?.draft;
-  Object.assign(form, value ? { protocol: value.protocol, vendor: value.vendor, baseUrl: value.baseUrl, model: value.model, apiKey: '' } : { protocol: 'OLLAMA', vendor: 'Ollama', baseUrl: 'http://127.0.0.1:11434', model: '', apiKey: '' });
+  Object.assign(form, value ? { protocol: value.protocol, vendor: value.vendor, baseUrl: value.baseUrl, model: value.model, apiKey: '' } : { protocol: 'OLLAMA', vendor: 'Ollama', baseUrl: defaultOllamaUrl(), model: '', apiKey: '' });
   installed.value = []; notice.value = ''; confirmation.value = false; reindex.value = false; cloud.value = false;
 }
 watch(() => [business.user?.id, business.user?.role], () => { ++scope; form.apiKey = ''; reset(); void loadModels(); }, { immediate: true, flush: 'sync' });
@@ -24,7 +30,7 @@ onUnmounted(() => { ++scope; form.apiKey = ''; releaseModels(); });
 function protocolChanged() {
   form.apiKey = ''; installed.value = []; notice.value = '';
   form.vendor = form.protocol === 'OLLAMA' ? 'Ollama' : '自定义兼容服务';
-  form.baseUrl = form.protocol === 'OLLAMA' ? 'http://127.0.0.1:11434' : '';
+  form.baseUrl = form.protocol === 'OLLAMA' ? defaultOllamaUrl() : '';
   form.model = '';
 }
 function vendorChanged() {
@@ -75,7 +81,7 @@ async function activate() {
             <label for="model-protocol">接入方式<select id="model-protocol" v-model="form.protocol" @change="protocolChanged"><option value="OLLAMA">本地部署 · Ollama</option><option value="OPENAI">云端 API · OpenAI 兼容</option><option value="NONE">关闭模型能力</option></select></label>
             <template v-if="form.protocol !== 'NONE'">
               <label v-if="form.protocol === 'OPENAI'" for="model-vendor">服务商<select id="model-vendor" v-model="form.vendor" @change="vendorChanged"><option>自定义兼容服务</option><option>千问</option><option>GLM</option><option>DeepSeek</option></select></label>
-              <label for="model-url">服务基础地址<input id="model-url" v-model="form.baseUrl" required maxlength="400" type="url" placeholder="http://127.0.0.1:11434" @input="installed = []; notice = ''; form.apiKey = ''" /></label>
+              <label for="model-url">服务基础地址<input id="model-url" v-model="form.baseUrl" required maxlength="400" type="url" :placeholder="defaultOllamaUrl()" @input="installed = []; notice = ''; form.apiKey = ''" /></label>
               <p class="model-field-help">{{ form.protocol === 'OLLAMA' ? '127.0.0.1 指 AI 服务所在机器，不是浏览器所在电脑。这里只读取已安装模型，不下载、不启动模型。' : '填写服务商提供的 HTTPS 基础地址，不要填写完整 chat/completions 路径。服务商名称不代表已完成真实兼容验收。' }}</p>
               <NButton v-if="form.protocol === 'OLLAMA'" secondary :disabled="!form.baseUrl || modelAdmin.busy" :loading="modelAdmin.operation === 'discover'" @click="discover">检测服务并读取模型</NButton>
               <label v-if="installed.length" for="installed-model">已安装模型<select id="installed-model" v-model="form.model"><option value="" disabled>请选择模型（仍需测试用途是否匹配）</option><option v-for="name in installed" :key="name" :value="name">{{ name }}</option></select></label>

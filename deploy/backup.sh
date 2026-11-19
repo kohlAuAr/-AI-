@@ -8,7 +8,9 @@ folder="backups/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir "$folder"
 # Freeze writes to BOTH databases. Resume only services which were previously running.
 running=$(dc ps --status running --services | grep -E '^(campus|ai)$' || true)
-resume() { if [ -n "$running" ]; then dc start $running >/dev/null; fi; }
+# Nginx resolves the upstream name once at startup; a restarted backend can come
+# back on another address, so reload after resuming to drop the stale one.
+resume() { if [ -n "$running" ]; then dc start $running >/dev/null; dc exec -T web nginx -s reload >/dev/null 2>&1 || true; fi; }
 trap resume EXIT
 trap 'exit 130' HUP INT TERM
 dc stop campus ai

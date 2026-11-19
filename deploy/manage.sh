@@ -24,6 +24,9 @@ case "$command" in
     if [ "$command" = update ]; then bash backup.sh; fi
     dc up -d --wait --wait-timeout 240
     dc exec -T web nginx -t
+    # Recreating a backend can hand it a different container address; Nginx only
+    # resolves upstream names at startup, so reload to pick up the live one.
+    dc exec -T web nginx -s reload
     if [ -n "$current" ] && [ "$current" != "$release" ]; then printf '%s\n' "$current" > .previous; fi
     printf '%s\n' "$release" > .release.tmp; mv .release.tmp .release
     echo "Active release: $release. Failed updates never change .release; inspect logs before retrying."

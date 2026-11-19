@@ -43,8 +43,20 @@ services:
       DB_PORT: '3306'
       REDIS_HOST: redis
       REDIS_PORT: '6379'
-      AI_MODE: local
-      EMBEDDING_PROVIDER: none
+      AI_MODE: ${AI_MODE:-local}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-none}
+      # Native Ollama on the Docker host: no /v1 suffix. Leave blank for the LOCAL (keyword) mode.
+      CHAT_BASE_URL: ${CHAT_BASE_URL:-http://host.docker.internal:11434}
+      CHAT_MODEL: ${CHAT_MODEL:-}
+      CHAT_API_KEY: ${CHAT_API_KEY:-}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://host.docker.internal:11434}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      # Docker Desktop resolves host.docker.internal already; on a Linux server add
+      # `extra_hosts: ["host.docker.internal:host-gateway"]` to reach a host-side Ollama.
+      # The assistant's read-only tool calls go back to the campus service; without this
+      # the client falls back to 127.0.0.1:8090 and every tool call fails.
+      AI_CAMPUS_BASE_URL: ${AI_CAMPUS_BASE_URL:-http://campus:8090}
       AI_MODEL_ALLOWED_URLS: ${AI_MODEL_ALLOWED_URLS:?Set exact allowed model endpoints}
       AI_MAX_CONCURRENT_MODEL_REQUESTS: ${AI_MAX_CONCURRENT_MODEL_REQUESTS:-2}
       TZ: Asia/Shanghai
