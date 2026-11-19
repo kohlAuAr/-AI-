@@ -29,6 +29,10 @@ public class AiServiceClient {
     public JsonNode get(String path, AiIdentity.Actor actor) {
         return client.get().uri("/internal/" + path).headers(headers -> actorHeaders(headers, actor)).retrieve().body(JsonNode.class);
     }
+    public void delete(String path, AiIdentity.Actor actor) {
+        client.delete().uri("/internal/" + path).headers(headers -> actorHeaders(headers, actor)).retrieve().toBodilessEntity();
+    }
+
     public JsonNode ask(String path, Map<String, Object> body, AiIdentity.Actor actor) {
         return client.post().uri("/internal/" + path).headers(headers -> actorHeaders(headers, actor)).body(body).retrieve().body(JsonNode.class);
     }

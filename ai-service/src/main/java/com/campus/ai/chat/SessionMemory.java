@@ -27,6 +27,11 @@ public class SessionMemory {
         }
         return authorized;
     }
+    public void evict(String scope, String id) {
+        if (!settings.redisEnabled()) return;
+        try { redis.delete(key(scope, id)); }
+        catch (org.springframework.dao.DataAccessException ignored) { /* Durable history is already gone. */ }
+    }
     public void refresh(String scope, String id, List<Map<String, String>> messages) {
         if (!settings.redisEnabled()) return;
         try { redis.opsForValue().set(key(scope, id), mapper.writeValueAsString(messages), Duration.ofHours(2)); }

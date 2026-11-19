@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -69,6 +70,15 @@ public class ChatService {
         memory.refresh(actor.cacheScope(), id, databaseMessages(actor, id));
         return new Reply(id, answer, references, settings.mode().name(), retrieval, saved.getCreatedAt(), steps);
     }
+    /** Owner-scoped deletion: turns and the ownership row go together, and any cached context is dropped. */
+    @Transactional
+    public void delete(AiActor actor, String id) {
+        UUID.fromString(id); requireOwner(actor, id);
+        conversations.deleteByConversationId(id);
+        owners.deleteById(id);
+        memory.evict(actor.cacheScope(), id);
+    }
+
     public List<TurnView> history(AiActor actor, String id) {
         UUID.fromString(id); requireOwner(actor, id);
         return conversations.findByConversationIdOrderByIdAsc(id).stream().map(turn -> authorizedView(actor, turn)).toList();

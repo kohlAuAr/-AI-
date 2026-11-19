@@ -78,4 +78,23 @@ class AccountIsolationTest {
         mvc.perform(actor(get("/internal/conversations/" + id), 12, "STUDENT", "")).andExpect(status().isNotFound());
         assertThat(turns.findByConversationIdOrderByIdAsc(id)).hasSize(1);
     }
+    @Test void onlyTheOwnerCanDeleteAConversationAndItsTurns() throws Exception {
+        var owner = new AiActor(12, "STUDENT", Set.of(8001L), Set.of());
+        String id = chat.ask("删除范围测试问题", null, owner).conversationId();
+        assertThat(turns.findByConversationIdOrderByIdAsc(id)).hasSize(1);
+
+        // Another account cannot delete it, and the turns stay intact.
+        mvc.perform(actor(delete("/internal/conversations/" + id), 13, "STUDENT", "")).andExpect(status().isNotFound());
+        assertThat(turns.findByConversationIdOrderByIdAsc(id)).hasSize(1);
+
+        // The owner deletes the conversation: turns and ownership go together.
+        mvc.perform(actor(delete("/internal/conversations/" + id), 12, "STUDENT", "8001")).andExpect(status().isNoContent());
+        assertThat(turns.findByConversationIdOrderByIdAsc(id)).isEmpty();
+        assertThat(chat.sessions(owner)).extracting(ChatService.SessionView::id).doesNotContain(id);
+        mvc.perform(actor(get("/internal/conversations/" + id), 12, "STUDENT", "8001")).andExpect(status().isNotFound());
+        mvc.perform(actor(delete("/internal/conversations/" + id), 12, "STUDENT", "8001")).andExpect(status().isNotFound());
+
+        // Malformed ids are rejected before any storage access.
+        mvc.perform(actor(delete("/internal/conversations/not-a-uuid"), 12, "STUDENT", "8001")).andExpect(status().isBadRequest());
+    }
 }

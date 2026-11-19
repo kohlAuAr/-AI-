@@ -43,3 +43,20 @@ export async function sendQuestion(question: string, channel: 'chat' | 'assistan
   } catch (error) { if (ticket === version && owner === business.user?.id) chatState.error = `${errorMessage(error)}。如响应丢失，可刷新历史核对，或新建会话重试。`; return false; }
   finally { if (ticket === version) chatState.busy = false; }
 }
+
+/** 删除本人会话：先由服务端校验归属，成功后再清理本地列表与当前会话。 */
+export async function deleteSession(id: string): Promise<boolean> {
+  if (!businessMode || !business.user || chatState.busy || chatState.loading) return false;
+  const owner = business.user.id, ticket = ++version;
+  chatState.error = '';
+  try {
+    await request<void>(`/ai/conversations/${id}`, { method: 'DELETE' });
+    if (ticket !== version || owner !== business.user?.id) return false;
+    chatState.sessions = chatState.sessions.filter(row => row.id !== id);
+    if (chatState.conversationId === id) newConversation();
+    return true;
+  } catch (error) {
+    if (ticket === version && owner === business.user?.id) chatState.error = `删除会话失败：${errorMessage(error)}`;
+    return false;
+  }
+}

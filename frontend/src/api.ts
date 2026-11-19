@@ -30,7 +30,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     catch { /* The proxy may return plain text when a backend is stopped. */ }
     throw new Error(message);
   }
-  return response.json() as Promise<T>;
+  // 204 与空响应（例如删除会话）不应按 JSON 解析。
+  const body = await response.text();
+  return (body ? JSON.parse(body) : undefined) as T;
 }
 
 export function errorMessage(error: unknown) {

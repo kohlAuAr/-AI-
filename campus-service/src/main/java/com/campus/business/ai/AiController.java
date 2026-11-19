@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.Map;
 import java.security.Principal;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +48,13 @@ public class AiController {
         // Restrict the path component; never concatenate arbitrary user paths into the upstream URI.
         java.util.UUID.fromString(id);
         return ai.get("conversations/" + id, identity.current(user));
+    }
+    @DeleteMapping("/conversations/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteConversation(Principal user, @PathVariable String id) {
+        // Only the current account may delete; the AI service re-checks ownership and returns 404 otherwise.
+        java.util.UUID.fromString(id);
+        ai.delete("conversations/" + id, identity.current(user));
     }
     @PostMapping("/assistant")
     public JsonNode assistant(Principal user, @RequestBody Map<String, Object> body) {

@@ -11,6 +11,7 @@ const paths: Record<string, string> = {
   search: 'M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm6-2 6 6',
   chevron: 'm9 5 7 7-7 7',
   close: 'm6 6 12 12M18 6 6 18',
+  trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
   bookmark: 'M6 3h12v18l-6-4-6 4Z',
   bell: 'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5Zm5 4h4',
   photo: 'M3 6h5l2-3h4l2 3h5v14H3Zm9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.util.List;
 import com.campus.ai.security.AiActor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +19,9 @@ public class ChatController {
         return chat.ask(body.question().trim(), body.conversationId(), actor);
     }
 
+    @DeleteMapping("/conversations/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@RequestAttribute AiActor actor, @PathVariable String id) { chat.delete(actor, id); }
     @GetMapping("/conversations/{id}")
     public List<ChatService.TurnView> history(@RequestAttribute AiActor actor, @PathVariable String id) { return chat.history(actor, id); }
     @GetMapping("/conversations")
