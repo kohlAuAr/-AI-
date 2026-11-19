@@ -159,6 +159,12 @@
   .community-page-footer span { margin-left: 0; }
 }
 .community-interest-description { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--community-text); font-size: 15px; line-height: 1.8; margin: 12px 0; }
+.community-interest-card { margin: 0 24px 14px; padding: 14px 16px 15px; border: 1px solid var(--community-line); border-radius: 12px; background: var(--community-bg); }
+.community-interest-card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 7px; }
+.community-interest-card-title > span { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--community-muted); }
+.community-interest-card-title > button { font-size: 12px; color: var(--community-green); }
+.community-interest-card > p { font-size: 14px; line-height: 1.75; color: var(--community-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.community-interest-card > p.is-empty { color: var(--community-muted); }
 .community-semantic-row { display: flex; align-items: center; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--community-line); }
 .community-semantic-row > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .community-semantic-row h3 { color: var(--community-text); font-size: 16px; margin-bottom: 8px; }
